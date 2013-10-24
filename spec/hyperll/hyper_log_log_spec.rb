@@ -25,9 +25,21 @@ module Hyperll
         hll.offer(rand(2**63))
       end
 
-      estimate = hll.cardinality
-      err = (estimate - size).abs / size.to_f
-      expect(err).to be < 0.1
+      expect(hll.cardinality).to be_within(10).percent_of(size)
+    end
+
+    it 'merges with other hyperloglog instances' do
+      size = 100_000
+      hlls = Array.new(5) do
+        HyperLogLog.new(16).tap { |hll|
+          size.times { hll.offer(rand(2**63)) }
+        }
+      end
+
+      merged = HyperLogLog.new(16)
+      merged.merge(*hlls)
+
+      expect(merged.cardinality).to be_within(10).percent_of(size * hlls.length)
     end
   end
 end

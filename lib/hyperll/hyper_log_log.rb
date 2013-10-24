@@ -6,6 +6,8 @@ module Hyperll
     INT_SIZE = 32
     INT_HASH = 0xFFFFFFFF
 
+    attr_reader :count, :register_set
+
     # Constructs a new HyperLogLog instance
     #
     # log2m - accuracy of the counter; larger values are more accurate
@@ -51,6 +53,16 @@ module Hyperll
       else
         estimate.round
       end
+    end
+
+    def merge(*others)
+      raise "Cannot merge hyperloglogs of different sizes" unless others.all? { |o| o.count == count }
+
+      others.each do |other|
+        @register_set.merge(other.register_set)
+      end
+
+      self
     end
 
     private
