@@ -39,7 +39,7 @@ module Hyperll
 
     def each
       return enum_for(:each) unless block_given?
-      @size.times do |i|
+      @count.times do |i|
         yield self[i]
       end
     end
