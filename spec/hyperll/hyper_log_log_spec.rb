@@ -41,5 +41,30 @@ module Hyperll
 
       expect(merged.cardinality).to be_within(10).percent_of(size * hlls.length)
     end
+
+    it 'serializes to a string' do
+      hll = HyperLogLog.new(4)
+      hll.offer(1)
+      hll.offer(2)
+
+      # h = Java::com::clearspring::analytics::stream::cardinality::HyperLogLog.new(4)
+      # h.offer(1)
+      # h.offer(2)
+      # h.getBytes()
+      expect(hll.serialize.unpack("C*")).to eq(
+        [0, 0, 0, 4, 0, 0, 0, 12, 2, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0]
+      )
+    end
+
+    it 'unserializes from a string' do
+      serialized = [0, 0, 0, 4, 0, 0, 0, 12, 2, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0].pack("C*")
+      hll = HyperLogLog.unserialize(serialized)
+
+      expect(hll.cardinality).to eq(2)
+      hll.offer(1)
+      hll.offer(2)
+      hll.offer(3)
+      expect(hll.cardinality).to eq(3)
+    end
   end
 end

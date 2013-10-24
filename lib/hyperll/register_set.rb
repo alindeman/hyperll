@@ -6,9 +6,9 @@ module Hyperll
     REGISTER_SIZE = 5
     INTEGER_SIZE = 32
 
-    attr_reader :count
+    attr_reader :count, :size
 
-    def initialize(count)
+    def initialize(count, values = nil)
       @count = count
 
       @bits = count / LOG2_BITS_PER_WORD
@@ -20,7 +20,7 @@ module Hyperll
         @size = @bits + 1
       end
 
-      @values = Array.new(@size, 0)
+      @values = values || Array.new(@size, 0)
     end
 
     def []=(position, value)
@@ -72,6 +72,10 @@ module Hyperll
 
         @values[bucket] = word
       end
+    end
+
+    def serialize
+      @values.pack("N*")
     end
 
     protected

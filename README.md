@@ -27,4 +27,17 @@ merged.cardinality # => 5
 
 ### Serialization
 
-TODO
+HyperLogLog can be serialized to a binary string. It is compatible with the
+binary format from the Java [stream-lib](https://github.com/addthis/stream-lib)
+library.
+
+```ruby
+hll = Hyperll::HyperLogLog.new(4)
+hll.offer(1)
+hll.offer(2)
+hll.offer(3)
+hll.serialize # => "\x00\x00\x00\x04\x00\x00\x00\f\x02\x00\x00\x00\x00\x00\x88\x00\x00\x00\x00\x00"
+
+hll2 = Hyperll::HyperLogLog.unserialize("\x00\x00\x00\x04\x00\x00\x00\f\x02\x00\x00\x00\x00\x00\x88\x00\x00\x00\x00\x00")
+hll2.cardinality # => 3
+```

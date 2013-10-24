@@ -8,13 +8,18 @@ module Hyperll
 
     attr_reader :log2m
 
+    def self.unserialize(serialized)
+      log2m, rs_size, *rs_values = serialized.unpack("N*")
+      new(log2m, RegisterSet.new(2 ** log2m, rs_values))
+    end
+
     # Constructs a new HyperLogLog instance
     #
     # log2m - accuracy of the counter; larger values are more accurate
-    def initialize(log2m)
+    def initialize(log2m, register_set = nil)
       @log2m = log2m
       @count = 2 ** log2m
-      @register_set = RegisterSet.new(@count)
+      @register_set = register_set || RegisterSet.new(@count)
 
       case log2m
       when 4
@@ -63,6 +68,10 @@ module Hyperll
       end
 
       self
+    end
+
+    def serialize
+      [@log2m, @register_set.size * 4].pack("N*") + @register_set.serialize
     end
 
     protected
