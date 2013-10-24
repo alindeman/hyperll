@@ -6,7 +6,7 @@ module Hyperll
     REGISTER_SIZE = 5
     INTEGER_SIZE = 32
 
-    attr_reader :count, :values
+    attr_reader :count
 
     def initialize(count)
       @count = count
@@ -72,6 +72,11 @@ module Hyperll
 
         @values[bucket] = word
       end
+    end
+
+    protected
+    def values
+      @values
     end
   end
 end

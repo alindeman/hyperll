@@ -6,7 +6,7 @@ module Hyperll
     INT_SIZE = 32
     INT_HASH = 0xFFFFFFFF
 
-    attr_reader :count, :register_set
+    attr_reader :log2m
 
     # Constructs a new HyperLogLog instance
     #
@@ -56,7 +56,7 @@ module Hyperll
     end
 
     def merge(*others)
-      raise "Cannot merge hyperloglogs of different sizes" unless others.all? { |o| o.count == count }
+      raise "Cannot merge hyperloglogs of different sizes" unless others.all? { |o| o.log2m == log2m }
 
       others.each do |other|
         @register_set.merge(other.register_set)
@@ -65,9 +65,13 @@ module Hyperll
       self
     end
 
-    private
+    protected
     def number_of_leading_zeros(int)
       -(Math.log2(int).to_i - 31)
+    end
+
+    def register_set
+      @register_set
     end
   end
 end
