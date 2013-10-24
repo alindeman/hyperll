@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = Hyperll::VERSION
   spec.authors       = ["Andy Lindeman"]
   spec.email         = ["andy@andylindeman.com"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
-  spec.homepage      = ""
+  spec.description   = %q{HyperLogLog implementation in pure Ruby}
+  spec.summary       = %q{HyperLogLog implementation in pure Ruby}
+  spec.homepage      = "https://github.com/alindeman/hyperll"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)

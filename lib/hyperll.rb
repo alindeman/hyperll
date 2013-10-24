@@ -1,5 +1,2 @@
 require "hyperll/version"
-
-module Hyperll
-  # Your code goes here...
-end
+require "hyperll/hyper_log_log"
