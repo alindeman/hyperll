@@ -15,5 +15,11 @@ module Hyperll
       expect(MurmurHash.hash(2 ** 33)).to eq("ab332279".to_i(16))
       expect(MurmurHash.hash((2 ** 36) - 1)).to eq("db264be3".to_i(16))
     end
+
+    it 'hashes strings' do
+      # java.lang.Integer.toHexString(Java::com::clearspring::analytics::hash::MurmurHash.hash("abc123"))
+      expect(MurmurHash.hash("abc123")).to eq("375301eb".to_i(16))
+      expect(MurmurHash.hash("The quick brown fox jumped over the lazy dog")).to eq("fe639b68".to_i(16))
+    end
   end
 end
