@@ -221,5 +221,21 @@ module Hyperll
         expect(hllp.cardinality).to eq(8) # 3 + 3 = 8; that's how it goes with hll
       end
     end
+
+    context 'normal with sparse' do
+      it 'merges, though the cardinality may not come out exactly' do
+        hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 0, 0, 12, 0, 0, 0, 32, 4, 0, 0, 0, 0, 0, 4, 0].pack("C*"))
+        hllp2 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 10, 1, 3, -46, 5, 50, -114, 4].pack("C*"))
+
+        expect(hllp.format).to eq(:normal)
+        expect(hllp.cardinality).to eq(3)
+        expect(hllp2.format).to eq(:sparse)
+        expect(hllp2.cardinality).to eq(3)
+
+        hllp.merge(hllp2)
+        expect(hllp.format).to eq(:normal)
+        expect(hllp.cardinality).to eq(8) # 3 + 3 = 8; that's how it goes with hll
+      end
+    end
   end
 end

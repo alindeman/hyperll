@@ -162,6 +162,12 @@ module Hyperll
         when [:sparse, :normal]
           convert_to_normal
           @register_set.merge(other.register_set)
+        when [:normal, :sparse]
+          other.sparse_set.each do |value|
+            idx = other.index(value)
+            r = other.decode_run_length(value)
+            @register_set.update_if_greater(idx, r)
+          end
         end
       end
     end
@@ -187,6 +193,18 @@ module Hyperll
 
     def register_set
       @register_set
+    end
+
+    def index(k)
+      sparse_index(k) >> (sp - p)
+    end
+
+    def decode_run_length(k)
+      if (k & 1) == 1
+        ((k >> 1) & 63) ^ 63
+      else
+        number_of_leading_zeros(((k << p) & INT_MASK) + (31 - sp)) + 1
+      end
     end
 
     private
@@ -293,18 +311,6 @@ module Hyperll
         k >> 7
       else
         k >> 1
-      end
-    end
-
-    def index(k)
-      sparse_index(k) >> (sp - p)
-    end
-
-    def decode_run_length(k)
-      if (k & 1) == 1
-        ((k >> 1) & 63) ^ 63
-      else
-        number_of_leading_zeros(((k << p) & INT_MASK) + (31 - sp)) + 1
       end
     end
 
