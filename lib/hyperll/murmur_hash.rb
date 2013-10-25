@@ -1,7 +1,8 @@
 module Hyperll
   # Adapted from <https://github.com/addthis/stream-lib/blob/master/src/main/java/com/clearspring/analytics/hash/MurmurHash.java>
   class MurmurHash
-    INT_MASK = 0xFFFFFFFF
+    INT_MASK  = 0xFFFFFFFF
+    LONG_MASK = 0xFFFFFFFFFFFFFFFF
 
     def self.hash(obj)
       if Integer === obj
@@ -90,5 +91,58 @@ module Hyperll
       h
     end
     private_class_method :hash_string
+
+    def self.hash64(obj)
+      return hash64_str(obj.to_s)
+    end
+
+    def self.hash64_str(str, seed = 0xe17a1465)
+      data = str.bytes
+      length = data.length
+
+      m = 0xc6a4a7935bd1e995
+      r = 47
+
+      h = (seed & 0xffffffff) ^ (length * m)
+      length8 = length / 8
+
+      0.upto(length8 - 1) { |i|
+        i8 = i * 8
+        k = ((data[i8 + 0] & 0xff))       + ((data[i8 + 1] & 0xff) << 8)  +
+            ((data[i8 + 2] & 0xff) << 16) + ((data[i8 + 3] & 0xff) << 24) +
+            ((data[i8 + 4] & 0xff) << 32) + ((data[i8 + 5] & 0xff) << 40) +
+            ((data[i8 + 6] & 0xff) << 48) + ((data[i8 + 7] & 0xff) << 56)
+
+        k *= m
+        k &= LONG_MASK
+        k ^= k >> r
+        k *= m
+
+        h ^= k
+        h *= m
+        h &= LONG_MASK
+      }
+
+      left = length % 8
+      if left >= 7 then h ^= (data[(length & ~7) + 6] & 0xff) << 48 end
+      if left >= 6 then h ^= (data[(length & ~7) + 5] & 0xff) << 40 end
+      if left >= 5 then h ^= (data[(length & ~7) + 4] & 0xff) << 32 end
+      if left >= 4 then h ^= (data[(length & ~7) + 3] & 0xff) << 24 end
+      if left >= 3 then h ^= (data[(length & ~7) + 2] & 0xff) << 16 end
+      if left >= 2 then h ^= (data[(length & ~7) + 1] & 0xff) << 8  end
+      if left >= 1
+        h ^= (data[length & ~7] & 0xff)
+        h *= m
+        h &= LONG_MASK
+      end
+
+      h ^= h >> r
+      h *= m
+      h &= LONG_MASK
+      h ^= h >> r
+
+      h
+    end
+    private_class_method :hash64_str
   end
 end
