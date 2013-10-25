@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'hyperll/hyper_log_log'
 
 module Hyperll

@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'hyperll/register_set'
 
 module Hyperll

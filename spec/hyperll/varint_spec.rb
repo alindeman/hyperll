@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'hyperll/varint'
 
 module Hyperll

@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'base64'
 require 'hyperll/hyper_log_log_plus'
 
