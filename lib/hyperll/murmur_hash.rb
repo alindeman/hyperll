@@ -38,7 +38,7 @@ module Hyperll
     private_class_method :hash_int
 
     def self.hash_string(str, seed = -1)
-      data = str.bytes
+      data = str.bytes.to_a
       length = data.length
 
       m = 0x5bd1e995
@@ -97,7 +97,7 @@ module Hyperll
     end
 
     def self.hash64_str(str, seed = 0xe17a1465)
-      data = str.bytes
+      data = str.bytes.to_a
       length = data.length
 
       m = 0xc6a4a7935bd1e995
