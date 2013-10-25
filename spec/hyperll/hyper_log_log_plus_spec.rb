@@ -151,4 +151,33 @@ module Hyperll
       expect(hllp.cardinality).to eq(4)
     end
   end
+
+  describe 'merging' do
+    it 'merges a sparse format with another sparse format and keeps the cardinality exact' do
+      hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQLC3gKCxQM="))
+      hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQSglAPiIdbJAfga"))
+
+      hllp.merge(hllp2)
+      expect(hllp.cardinality).to eq(6)
+    end
+
+    it 'merges a sparse format with another sparse format' do
+      hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQOwX+yBA7TzAw=="))
+      hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQ7SKbociFqGigLUL9oagCWmC+IdlBqkE8g7jFiCnwE="))
+
+      hllp.merge(hllp2)
+      expect(hllp.cardinality).to eq(17)
+    end
+
+    it 'merges a sparse format with another sparse format that has some of the same elements' do
+      hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 11, 16, 1, 3, -116, -23, 2, -90, 25, -66, -121, 2].pack("C*"))
+      hllp2 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 11, 16, 1, 3, -116, -23, 2, -90, 25, -6, -96, 4].pack("C*"))
+
+      expect(hllp.cardinality).to eq(3)
+      expect(hllp2.cardinality).to eq(3)
+
+      hllp.merge(hllp2)
+      expect(hllp.cardinality).to eq(4)
+    end
+  end
 end
