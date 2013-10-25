@@ -1,6 +1,7 @@
 require_relative 'varint'
 require_relative 'murmur_hash'
 require_relative 'register_set'
+require_relative 'delta_bytes'
 
 module Hyperll
   class HyperLogLogPlus
@@ -96,7 +97,8 @@ module Hyperll
           hllp.format = :normal
         }
       when 1 # :sparse
-
+        sparse_set = DeltaBytes.uncompress(unpacked)
+        new(p, sp, nil, sparse_set)
       else
         raise ArgumentError, "invalid format: #{format_type}"
       end
@@ -108,7 +110,7 @@ module Hyperll
     # sp - precision value for the sparse set
     #
     # 4 <= p <= sp < 32
-    def initialize(p, sp = 0, register_set = nil)
+    def initialize(p, sp = 0, register_set = nil, sparse_set = nil)
       raise ArgumentError, "p must be >= 4" if p < 4
       raise ArgumentError, "sp must be < 32" if sp >= 32
       raise ArgumentError, "p must be <= sp" if !sp.zero? && p > sp
@@ -118,6 +120,11 @@ module Hyperll
 
       @count = 2 ** p
       @register_set = register_set || RegisterSet.new(@count)
+
+      if sp > 0
+        @sparse_count = 2 ** sp
+        @sparse_set = sparse_set || []
+      end
 
       case p
       when 4
@@ -136,7 +143,8 @@ module Hyperll
       when :normal
         normal_cardinality
       when :sparse
-        raise NotImplementedError
+        linear_count = @sparse_count * Math.log(@sparse_count / (@sparse_count - @sparse_set.length).to_f)
+        linear_count.round.to_i
       end
     end
 

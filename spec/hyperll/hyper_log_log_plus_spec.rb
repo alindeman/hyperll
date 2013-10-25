@@ -44,7 +44,19 @@ module Hyperll
         expect(hllp.cardinality).to eq(2)
       end
 
-      it 'unserializes a sparse format instance from a string'
+      it 'unserializes a sparse format instance from a string' do
+        # hllp = Java::com::clearspring::analytics::stream::cardinality::HyperLogLogPlus.new(4, 10)
+        # hllp.offer(1)
+        # hllp.offer(2)
+        # h.getBytes()
+        serialized = [-1, -1, -1, -2, 4, 10, 1, 2, -46, 5, -64, 4].pack("C*")
+        hllp = HyperLogLogPlus.unserialize(serialized)
+
+        expect(hllp.format).to eq(:sparse)
+        expect(hllp.p).to eq(4)
+        expect(hllp.sp).to eq(10)
+        expect(hllp.cardinality).to eq(2)
+      end
     end
 
 
@@ -119,6 +131,24 @@ module Hyperll
       expect(hllp.p).to eq(11)
       expect(hllp.sp).to eq(16)
       expect(hllp.cardinality).to eq(5922)
+    end
+
+    it 'unserializes a sparse format instance with cardinality 2' do
+      hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQLC3gKCxQM="))
+
+      expect(hllp.format).to eq(:sparse)
+      expect(hllp.p).to eq(11)
+      expect(hllp.sp).to eq(16)
+      expect(hllp.cardinality).to eq(2)
+    end
+
+    it 'unserializes a sparse format instance with cardinality 4' do
+      hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQSglAPiIdbJAfga"))
+
+      expect(hllp.format).to eq(:sparse)
+      expect(hllp.p).to eq(11)
+      expect(hllp.sp).to eq(16)
+      expect(hllp.cardinality).to eq(4)
     end
   end
 end
