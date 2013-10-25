@@ -1,4 +1,4 @@
-# Hyperll [![Build Status](https://secure.travis-ci.org/alindeman/hyperll.png?branch=master)](http://travis-ci.org/alindeman/hyperll)
+# Hyperll [![Build Status](https://secure.travis-ci.org/alindeman/hyperll.png?branch=master)](http://travis-ci.org/alindeman/hyperll) [![Coverage Status](https://coveralls.io/repos/alindeman/hyperll/badge.png)](https://coveralls.io/r/alindeman/hyperll)
 
 HyperLogLog implementation in pure Ruby
 
