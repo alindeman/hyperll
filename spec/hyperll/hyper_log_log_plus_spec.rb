@@ -27,6 +27,17 @@ module Hyperll
         hllp = HyperLogLogPlus.new(11, 16)
         expect(hllp.format).to eq(:sparse)
       end
+
+      it 'converts from sparse to normal' do
+        hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 10, 1, 3, -46, 5, 50, -114, 4].pack("C*"))
+
+        expect(hllp.format).to eq(:sparse)
+        expect(hllp.cardinality).to eq(3)
+
+        hllp.convert_to_normal
+        expect(hllp.format).to eq(:normal)
+        expect(hllp.cardinality).to eq(3)
+      end
     end
 
     describe 'serialization' do
@@ -191,6 +202,22 @@ module Hyperll
         expect(hllp2.cardinality).to eq(3)
 
         hllp.merge(hllp2)
+        expect(hllp.cardinality).to eq(8) # 3 + 3 = 8; that's how it goes with hll
+      end
+    end
+
+    context 'sparse with normal' do
+      it 'merges, converting the sparse to a normal' do
+        hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 10, 1, 3, -46, 5, 50, -114, 4].pack("C*"))
+        hllp2 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 0, 0, 12, 0, 0, 0, 32, 4, 0, 0, 0, 0, 0, 4, 0].pack("C*"))
+
+        expect(hllp.format).to eq(:sparse)
+        expect(hllp.cardinality).to eq(3)
+        expect(hllp2.format).to eq(:normal)
+        expect(hllp2.cardinality).to eq(3)
+
+        hllp.merge(hllp2)
+        expect(hllp.format).to eq(:normal)
         expect(hllp.cardinality).to eq(8) # 3 + 3 = 8; that's how it goes with hll
       end
     end

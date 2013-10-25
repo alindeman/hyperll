@@ -7,6 +7,8 @@ module Hyperll
   class HyperLogLogPlus
     Distance = Struct.new(:index, :distance)
 
+    INT_MASK = 0xFFFFFFFF
+
     # threshold and bias data taken from google's bias correction data set: https://docs.google.com/document/d/1gyjfMHy43U9OWBXxfaeG-3MjGzejW1dlpyMwEYAAWEI/view?fullscreen#
     THRESHOLD_DATA = [
       10.0, 20.0, 40.0, 80.0, 220.0, 400.0, 900.0, 1800.0, 3100.0, 6500.0,
@@ -157,8 +159,25 @@ module Hyperll
           @sparse_set = merge_sparse_set(other.sparse_set)
         when [:normal, :normal]
           @register_set.merge(other.register_set)
+        when [:sparse, :normal]
+          convert_to_normal
+          @register_set.merge(other.register_set)
         end
       end
+    end
+
+    def convert_to_normal
+      return if format == :normal
+
+      @sparse_set.each do |value|
+        idx = index(value)
+        r = decode_run_length(value)
+        @register_set.update_if_greater(idx, r)
+      end
+
+      @format = :normal
+      @sparse_set = []
+      self
     end
 
     protected
@@ -275,6 +294,22 @@ module Hyperll
       else
         k >> 1
       end
+    end
+
+    def index(k)
+      sparse_index(k) >> (sp - p)
+    end
+
+    def decode_run_length(k)
+      if (k & 1) == 1
+        ((k >> 1) & 63) ^ 63
+      else
+        number_of_leading_zeros(((k << p) & INT_MASK) + (31 - sp)) + 1
+      end
+    end
+
+    def number_of_leading_zeros(int)
+      -(Math.log2(int).to_i - 31)
     end
   end
 end
