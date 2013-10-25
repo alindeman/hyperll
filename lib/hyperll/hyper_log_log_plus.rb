@@ -1,5 +1,7 @@
 module Hyperll
   class HyperLogLogPlus
+    attr_reader :p, :sp, :format
+
     # Constructs a new HyperLogLogPlus instance
     #
     # p - precision value for the normal set
@@ -12,6 +14,7 @@ module Hyperll
       raise ArgumentError, "p must be <= sp" if !sp.zero? && p > sp
 
       @p, @sp = p, sp
+      @format = @sp.zero? ? :normal : :sparse
     end
   end
 end

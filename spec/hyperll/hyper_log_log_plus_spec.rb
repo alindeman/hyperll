@@ -15,5 +15,17 @@ module Hyperll
         expect { HyperLogLogPlus.new(16, 11) }.to raise_error(ArgumentError)
       end
     end
+
+    describe 'format' do
+      it 'defaults to normal (non-sparse) format' do
+        hllp = HyperLogLogPlus.new(11)
+        expect(hllp.format).to eq(:normal)
+      end
+
+      it 'defaults to sparse format if sp is specified' do
+        hllp = HyperLogLogPlus.new(11, 16)
+        expect(hllp.format).to eq(:sparse)
+      end
+    end
   end
 end
