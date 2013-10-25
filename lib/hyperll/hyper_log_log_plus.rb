@@ -155,6 +155,8 @@ module Hyperll
         case [format, other.format]
         when [:sparse, :sparse]
           @sparse_set = merge_sparse_set(other.sparse_set)
+        when [:normal, :normal]
+          @register_set.merge(other.register_set)
         end
       end
     end
@@ -162,6 +164,10 @@ module Hyperll
     protected
     def sparse_set
       @sparse_set
+    end
+
+    def register_set
+      @register_set
     end
 
     private

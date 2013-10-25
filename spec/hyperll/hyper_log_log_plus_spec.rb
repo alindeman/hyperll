@@ -153,31 +153,46 @@ module Hyperll
   end
 
   describe 'merging' do
-    it 'merges a sparse format with another sparse format and keeps the cardinality exact' do
-      hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQLC3gKCxQM="))
-      hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQSglAPiIdbJAfga"))
+    context 'sparse with sparse' do
+      it 'merges and keeps the cardinality exact' do
+        hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQLC3gKCxQM="))
+        hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQSglAPiIdbJAfga"))
 
-      hllp.merge(hllp2)
-      expect(hllp.cardinality).to eq(6)
+        hllp.merge(hllp2)
+        expect(hllp.cardinality).to eq(6)
+      end
+
+      it 'merges and keeps the cardinality exact' do
+        hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQOwX+yBA7TzAw=="))
+        hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQ7SKbociFqGigLUL9oagCWmC+IdlBqkE8g7jFiCnwE="))
+
+        hllp.merge(hllp2)
+        expect(hllp.cardinality).to eq(17)
+      end
+
+      it 'merges with another instance with some of the same elements' do
+        hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 11, 16, 1, 3, -116, -23, 2, -90, 25, -66, -121, 2].pack("C*"))
+        hllp2 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 11, 16, 1, 3, -116, -23, 2, -90, 25, -6, -96, 4].pack("C*"))
+
+        expect(hllp.cardinality).to eq(3)
+        expect(hllp2.cardinality).to eq(3)
+
+        hllp.merge(hllp2)
+        expect(hllp.cardinality).to eq(4)
+      end
     end
 
-    it 'merges a sparse format with another sparse format' do
-      hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQOwX+yBA7TzAw=="))
-      hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQ7SKbociFqGigLUL9oagCWmC+IdlBqkE8g7jFiCnwE="))
+    context 'normal with normal' do
+      it 'merges, though the cardinality may not come out exactly' do
+        hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 0, 0, 12, 2, 0, 0, 0, 0, 48, 0, 5, 0, 0, 0, 0].pack("C*"))
+        hllp2 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 0, 0, 12, 0, 0, 0, 32, 4, 0, 0, 0, 0, 0, 4, 0].pack("C*"))
 
-      hllp.merge(hllp2)
-      expect(hllp.cardinality).to eq(17)
-    end
+        expect(hllp.cardinality).to eq(3)
+        expect(hllp2.cardinality).to eq(3)
 
-    it 'merges a sparse format with another sparse format that has some of the same elements' do
-      hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 11, 16, 1, 3, -116, -23, 2, -90, 25, -66, -121, 2].pack("C*"))
-      hllp2 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 11, 16, 1, 3, -116, -23, 2, -90, 25, -6, -96, 4].pack("C*"))
-
-      expect(hllp.cardinality).to eq(3)
-      expect(hllp2.cardinality).to eq(3)
-
-      hllp.merge(hllp2)
-      expect(hllp.cardinality).to eq(4)
+        hllp.merge(hllp2)
+        expect(hllp.cardinality).to eq(8) # 3 + 3 = 8; that's how it goes with hll
+      end
     end
   end
 end
