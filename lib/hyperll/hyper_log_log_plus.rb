@@ -186,6 +186,25 @@ module Hyperll
       self
     end
 
+    def serialize
+      str = ""
+      str << [-2].pack("N") # -VERSION
+      str << Varint.write_unsigned_var_int(p).pack("C*")
+      str << Varint.write_unsigned_var_int(sp).pack("C*")
+
+      case format
+      when :normal
+        str << Varint.write_unsigned_var_int(0).pack("C*")
+        str << Varint.write_unsigned_var_int(@register_set.size * 4).pack("C*")
+        str << @register_set.serialize
+      when :sparse
+        str << Varint.write_unsigned_var_int(1).pack("C*")
+        str << DeltaBytes.compress(@sparse_set).pack("C*")
+      end
+
+      str
+    end
+
     protected
     def sparse_set
       @sparse_set

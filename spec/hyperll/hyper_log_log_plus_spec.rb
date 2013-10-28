@@ -18,6 +18,38 @@ module Hyperll
       end
     end
 
+    describe 'serialization' do
+      it 'serializes a sparse format to a string' do
+        # TODO: We can't yet construct a HyperLogLogPlus from scratch, so we
+        # deserialize a HyperLogLogPlus from stream-lib, then serialize it
+        # back and make sure it matches.
+
+        # h = Java::com::clearspring::analytics::stream::cardinality::HyperLogLogPlus.new(4, 10)
+        # h.offer(1)
+        # h.offer(2)
+        # h.getBytes()
+        serialized = [-1, -1, -1, -2, 4, 10, 1, 2, -46, 5, -64, 4].pack("C*")
+
+        hllp = HyperLogLogPlus.unserialize(serialized)
+        expect(hllp.serialize).to eq(serialized)
+      end
+
+      it 'serializes a normal format to a string' do
+        # TODO: We can't yet construct a HyperLogLogPlus from scratch, so we
+        # deserialize a HyperLogLogPlus from stream-lib, then serialize it
+        # back and make sure it matches.
+
+        # h = Java::com::clearspring::analytics::stream::cardinality::HyperLogLogPlus.new(4)
+        # h.offer(1)
+        # h.offer(2)
+        # h.getBytes()
+        serialized = [-1, -1, -1, -2, 4, 0, 0, 12, 2, 0, 0, 0, 0, 48, 0, 0, 0, 0, 0, 0].pack("C*")
+
+        hllp = HyperLogLogPlus.unserialize(serialized)
+        expect(hllp.serialize).to eq(serialized)
+      end
+    end
+
     describe 'format' do
       it 'defaults to normal (non-sparse) format' do
         hllp = HyperLogLogPlus.new(11)

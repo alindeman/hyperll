@@ -3,6 +3,15 @@ require_relative 'varint'
 module Hyperll
   class DeltaBytes
     def self.compress(bytes)
+      compressed = Varint.write_unsigned_var_int(bytes.length)
+      previous_value = 0
+
+      bytes.each do |b|
+        compressed.concat(Varint.write_unsigned_var_int(b - previous_value))
+        previous_value = b
+      end
+
+      compressed
     end
 
     def self.uncompress(bytes)
