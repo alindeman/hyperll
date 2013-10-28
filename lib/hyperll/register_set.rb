@@ -5,6 +5,7 @@ module Hyperll
     LOG2_BITS_PER_WORD = 6
     REGISTER_SIZE = 5
     INTEGER_SIZE = 32
+    INT_MASK = 0xFFFFFFFF
 
     attr_reader :count, :size
 
@@ -27,7 +28,7 @@ module Hyperll
       bucket = position / LOG2_BITS_PER_WORD
       shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD))
 
-      @values[bucket] = (@values[bucket] & ~(0x1f << shift)) | (value << shift)
+      @values[bucket] = ((@values[bucket] & ~(0x1f << shift)) | (value << shift)) & INT_MASK
     end
 
     def [](position)
@@ -47,12 +48,12 @@ module Hyperll
     def update_if_greater(position, value)
       bucket = position / LOG2_BITS_PER_WORD
       shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
-      mask = 0x1f << shift;
+      mask = (0x1f << shift) & INT_MASK
 
       current_value = @values[bucket] & mask
       new_value = value << shift
       if current_value < new_value
-        @values[bucket] = (@values[bucket] & ~mask) | new_value
+        @values[bucket] = ((@values[bucket] & ~mask) | new_value) & INT_MASK
         true
       else
         false
