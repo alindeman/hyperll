@@ -125,6 +125,7 @@ module Hyperll
 
       if sp > 0
         @sparse_count = 2 ** sp
+        @sparse_set_threshold = 0.75 * @count
         @sparse_set = sparse_set || []
       end
 
@@ -157,6 +158,7 @@ module Hyperll
         case [format, other.format]
         when [:sparse, :sparse]
           @sparse_set = merge_sparse_set(other.sparse_set)
+          convert_to_normal_if_above_sparse_threshold
         when [:normal, :normal]
           @register_set.merge(other.register_set)
         when [:sparse, :normal]
@@ -184,6 +186,10 @@ module Hyperll
       @format = :normal
       @sparse_set = []
       self
+    end
+
+    def convert_to_normal_if_above_sparse_threshold
+      convert_to_normal if @sparse_set.length > @sparse_set_threshold
     end
 
     def serialize
