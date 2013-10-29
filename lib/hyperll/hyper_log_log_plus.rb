@@ -343,7 +343,9 @@ module Hyperll
     end
 
     def encoded_hash(k)
-      (k << (p + (31 - sp))) & INT_MASK
+      k <<= (p + (31 - sp))
+      k &= INT_MASK if k > INT_MASK
+      k
     end
 
     def number_of_leading_zeros(int)
