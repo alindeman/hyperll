@@ -103,16 +103,6 @@ module Hyperll
       end
     end
 
-    def cardinality
-      case format
-      when :normal
-        normal_cardinality
-      when :sparse
-        linear_count = @sparse_count * Math.log(@sparse_count / (@sparse_count - @sparse_set.length).to_f)
-        linear_count.round.to_i
-      end
-    end
-
     def merge(*others)
       raise "Cannot merge hyperloglogs of different sizes" unless others.all? { |o| o.p == p }
 

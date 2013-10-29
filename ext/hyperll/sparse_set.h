@@ -10,6 +10,7 @@ typedef struct {
 } sparse_set;
 
 void sparse_set_init(sparse_set *set, int capacity);
+int sparse_set_cardinality(sparse_set *set);
 void sparse_set_free(sparse_set *set);
 
 #endif

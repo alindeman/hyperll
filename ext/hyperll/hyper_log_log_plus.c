@@ -88,6 +88,20 @@ static VALUE rb_hyperllp_new(int argc, VALUE *argv, VALUE klass) {
     }
   }
 
+  if (!NIL_P(sparse_set_values)) {
+    Check_Type(sparse_set_values, T_ARRAY);
+
+    sparse_set *sset = hllp->sparse_set;
+    if (RARRAY_LEN(sparse_set_values) <= sset->capacity) {
+      sset->size = RARRAY_LEN(sparse_set_values);
+      for (int i = 0; i < sset->size; i++) {
+        sset->values[i] = NUM2UINT(rb_ary_entry(sparse_set_values, i));
+      }
+    } else {
+      rb_raise(rb_eArgError, "initial sparse set values have too many values");
+    }
+  }
+
   return hllpv;
 }
 
@@ -98,10 +112,8 @@ static VALUE rb_hyperllp_format(VALUE self) {
   switch(hllp->format) {
     case FORMAT_NORMAL:
       return ID2SYM(rb_intern("normal"));
-      break;
     case FORMAT_SPARSE:
       return ID2SYM(rb_intern("sparse"));
-      break;
   }
 
   return Qnil;
@@ -136,6 +148,20 @@ static VALUE rb_hyperllp_sp(VALUE self) {
   return INT2NUM(hllp->sp);
 }
 
+static VALUE rb_hyperllp_cardinality(VALUE self) {
+  hyperllp *hllp;
+  Data_Get_Struct(self, hyperllp, hllp);
+
+  switch(hllp->format) {
+    case FORMAT_NORMAL:
+      return INT2NUM(0);
+    case FORMAT_SPARSE:
+      return INT2NUM(sparse_set_cardinality(hllp->sparse_set));
+  }
+
+  return INT2NUM(0);
+}
+
 void Init_hyperll_hyper_log_log_plus(void) {
   rb_cHyperllp = rb_define_class_under(rb_mHyperll, "HyperLogLogPlus", rb_cObject);
 
@@ -145,4 +171,5 @@ void Init_hyperll_hyper_log_log_plus(void) {
   rb_define_method(rb_cHyperllp, "format=", rb_hyperllp_format_set, 1);
   rb_define_method(rb_cHyperllp, "p", rb_hyperllp_p, 0);
   rb_define_method(rb_cHyperllp, "sp", rb_hyperllp_sp, 0);
+  rb_define_method(rb_cHyperllp, "cardinality", rb_hyperllp_cardinality, 0);
 }
