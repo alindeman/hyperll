@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'hyperll/hyper_log_log'
+require 'hyperll'
 
 module Hyperll
   describe HyperLogLog do

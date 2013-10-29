@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'base64'
-require 'hyperll/hyper_log_log_plus'
+require 'hyperll'
 
 module Hyperll
   describe HyperLogLogPlus do

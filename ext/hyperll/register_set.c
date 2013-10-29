@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include "hyperll.h"
+#include "register_set.h"
 
 extern VALUE rb_mHyperll;
 VALUE rb_cRegisterSet;
@@ -7,34 +7,43 @@ VALUE rb_cRegisterSet;
 const int LOG2_BITS_PER_WORD = 6;
 const int REGISTER_SIZE = 5;
 
-typedef struct {
-  int count;
-  int size;
-  unsigned int *values;
-} register_set;
+void register_set_init(register_set *set, int count) {
+  set->count = count;
 
-void register_set_set(register_set *set, int position, unsigned int value) {
+  int bits = count / LOG2_BITS_PER_WORD;
+  if (bits == 0) {
+    set->size = 1;
+  } else if ((bits % sizeof(int)) == 0) {
+    set->size = bits;
+  } else {
+    set->size = bits + 1;
+  }
+
+  set->values = (uint32_t*)calloc(set->size, sizeof(uint32_t));
+}
+
+void register_set_set(register_set *set, int position, uint32_t value) {
   int bucket = position / LOG2_BITS_PER_WORD;
   int shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
 
   set->values[bucket] = (set->values[bucket] & ~(0x1f << shift)) | (value << shift);
 }
 
-unsigned int register_set_get(register_set *set, int position) {
+uint32_t register_set_get(register_set *set, int position) {
   int bucket = position / LOG2_BITS_PER_WORD;
   int shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
-  return (unsigned int)((set->values[bucket] & (0x1f << shift))) >> shift;
+  return (uint32_t)((set->values[bucket] & (0x1f << shift))) >> shift;
 }
 
-int register_set_update_if_greater(register_set *set, int position, unsigned int value) {
+int register_set_update_if_greater(register_set *set, int position, uint32_t value) {
   int bucket = position / LOG2_BITS_PER_WORD;
   int shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
-  unsigned int mask = 0x1f << shift;
+  uint32_t mask = 0x1f << shift;
 
   unsigned long cur = set->values[bucket] & mask;
   unsigned long new = value << shift;
   if (cur < new) {
-    set->values[bucket] = (unsigned int)((set->values[bucket] & ~mask) | new);
+    set->values[bucket] = (uint32_t)((set->values[bucket] & ~mask) | new);
     return 1;
   } else {
     return 0;
@@ -55,34 +64,22 @@ void register_set_merge(register_set *set, register_set *other) {
   }
 }
 
-static void register_set_free(register_set *set) {
+void register_set_free(register_set *set) {
   free(set->values);
   free(set);
 }
 
 static VALUE rb_register_set_new(int argc, VALUE *argv, VALUE klass) {
-  VALUE count;
-  VALUE values;
+  VALUE count, values;
   rb_scan_args(argc, argv, "11", &count, &values);
 
   register_set *set = ALLOC(register_set);
-  set->count = NUM2INT(count);
+  register_set_init(set, NUM2INT(count));
+  VALUE setv = Data_Wrap_Struct(klass, 0, register_set_free, set);
 
-  int bits = set->count / LOG2_BITS_PER_WORD;
-  if (bits == 0) {
-    set->size = 1;
-  } else if ((bits % sizeof(int)) == 0) {
-    set->size = bits;
-  } else {
-    set->size = bits + 1;
-  }
-
-  if (NIL_P(values)) {
-    set->values = (unsigned int*)calloc(set->size, sizeof(unsigned int));
-  } else {
+  if (!NIL_P(values)) {
     Check_Type(values, T_ARRAY);
     if (RARRAY_LEN(values) == set->size) {
-      set->values = (unsigned int*)calloc(set->size, sizeof(unsigned int));
       for (int i = 0; i < set->size; i++) {
         set->values[i] = NUM2UINT(rb_ary_entry(values, i));
       }
@@ -91,7 +88,7 @@ static VALUE rb_register_set_new(int argc, VALUE *argv, VALUE klass) {
     }
   }
 
-  return Data_Wrap_Struct(klass, 0, register_set_free, set);
+  return setv;
 }
 
 static VALUE rb_register_set_index_set(VALUE self, VALUE position, VALUE value) {
