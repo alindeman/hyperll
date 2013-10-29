@@ -1,7 +1,7 @@
 require_relative 'util'
 
 module Hyperll
-  class RegisterSet
+  class RegisterSetOld
     include Enumerable
     include Util
 

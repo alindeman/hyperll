@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'hyperll/register_set'
+require 'hyperll'
 
 module Hyperll
   describe RegisterSet do
