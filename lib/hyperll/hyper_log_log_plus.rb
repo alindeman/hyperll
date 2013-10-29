@@ -319,7 +319,7 @@ module Hyperll
         end
       end
 
-      new_set.sort_by { |e| [e, sparse_index(e), encoded_hash(e)] }
+      new_set
     end
 
     def consume_duplicates(sparse_set, index, start)
