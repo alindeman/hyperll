@@ -2,12 +2,13 @@ require_relative 'varint'
 require_relative 'murmur_hash'
 require_relative 'register_set'
 require_relative 'delta_bytes'
+require_relative 'util'
 
 module Hyperll
   class HyperLogLogPlus
-    Distance = Struct.new(:index, :distance)
+    include Util
 
-    INT_MASK = 0xFFFFFFFF
+    Distance = Struct.new(:index, :distance)
 
     # threshold and bias data taken from google's bias correction data set: https://docs.google.com/document/d/1gyjfMHy43U9OWBXxfaeG-3MjGzejW1dlpyMwEYAAWEI/view?fullscreen#
     THRESHOLD_DATA = [
@@ -223,7 +224,7 @@ module Hyperll
     end
 
     def index(k)
-      sparse_index(k) >> (sp - p)
+      sparse_index(k) / POWERS_OF_TWO[sp - p]
     end
 
     def decode_run_length(k)
