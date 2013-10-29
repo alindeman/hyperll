@@ -334,11 +334,11 @@ module Hyperll
     end
 
     def sparse_index(k)
-      k = k & INT_MASK
-      if (k & 1) == 1
-        k >> 7
+      k = k & INT_MASK if k > INT_MASK
+      if k % 2 == 1
+        k / 128
       else
-        k >> 1
+        k / 2
       end
     end
 
