@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "hyperll.h"
 #include "register_set.h"
+#include "sparse_set.h"
 
 extern VALUE rb_mHyperll;
 VALUE rb_cHyperllp;
@@ -13,19 +14,16 @@ typedef struct {
   int p;
   int count;
   int sp;
-  int sparse_count;
   int sparse_set_threshold;
   double alpha_mm;
 
   register_set *set;
-
-  unsigned int *sparse_set;
-  int sparse_set_length;
+  sparse_set *sparse_set;
 } hyperllp;
 
 void hyperllp_free(hyperllp *hllp) {
   if (hllp->set) register_set_free(hllp->set);
-  if (hllp->sparse_set) free(hllp->sparse_set);
+  if (hllp->sparse_set) sparse_set_free(hllp->sparse_set);
   free(hllp);
 }
 
@@ -39,9 +37,11 @@ void hyperllp_init(hyperllp *hllp, int p, int sp) {
   register_set_init(hllp->set, count);
 
   if (sp > 0) {
-    hllp->sparse_count = 1 << sp;
     hllp->sparse_set_threshold = (int)(0.75 * count);
-    hllp->sparse_set = (unsigned int*)calloc(count, sizeof(unsigned int));
+    hllp->sparse_set = ALLOC(sparse_set);
+
+    int sparse_capacity = 1 << sp;
+    sparse_set_init(hllp->sparse_set, sparse_capacity);
   }
 
   switch(p) {

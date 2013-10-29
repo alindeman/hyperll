@@ -1,6 +1,6 @@
 #ifndef __H_REGISTER_SET
 #define __H_REGISTER_SET
-#include <ruby.h>
+
 #include <stdint.h>
 
 typedef struct {
