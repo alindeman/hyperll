@@ -228,8 +228,8 @@ module Hyperll
     end
 
     def decode_run_length(k)
-      if (k & 1) == 1
-        ((k >> 1) & 63) ^ 63
+      if k % 2 == 1
+        ((k / 2) & 63) ^ 63
       else
         number_of_leading_zeros(encoded_hash(k)) + 1
       end
