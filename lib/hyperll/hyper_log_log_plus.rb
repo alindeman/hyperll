@@ -1,6 +1,5 @@
 require_relative 'varint'
 require_relative 'murmur_hash'
-require_relative 'register_set'
 require_relative 'delta_bytes'
 require_relative 'util'
 

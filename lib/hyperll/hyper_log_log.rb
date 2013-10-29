@@ -1,4 +1,3 @@
-require_relative 'register_set'
 require_relative 'murmur_hash'
 
 module Hyperll
