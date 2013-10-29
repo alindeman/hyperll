@@ -348,9 +348,5 @@ module Hyperll
       k &= INT_MASK if k > INT_MASK
       k
     end
-
-    def number_of_leading_zeros(int)
-      -(Math.log2(int).to_i - 31)
-    end
   end
 end
