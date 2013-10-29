@@ -172,6 +172,8 @@ module Hyperll
           end
         end
       end
+
+      self
     end
 
     def convert_to_normal
@@ -228,7 +230,7 @@ module Hyperll
       if (k & 1) == 1
         ((k >> 1) & 63) ^ 63
       else
-        number_of_leading_zeros((k << (p + (31 - sp))) & INT_MASK) + 1
+        number_of_leading_zeros(encoded_hash(k)) + 1
       end
     end
 
@@ -317,7 +319,7 @@ module Hyperll
         end
       end
 
-      new_set
+      new_set.sort_by { |e| [e, sparse_index(e), encoded_hash(e)] }
     end
 
     def consume_duplicates(sparse_set, index, start)
@@ -332,11 +334,16 @@ module Hyperll
     end
 
     def sparse_index(k)
+      k = k & INT_MASK
       if (k & 1) == 1
         k >> 7
       else
         k >> 1
       end
+    end
+
+    def encoded_hash(k)
+      (k << (p + (31 - sp))) & INT_MASK
     end
 
     def number_of_leading_zeros(int)
