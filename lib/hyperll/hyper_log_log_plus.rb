@@ -228,7 +228,7 @@ module Hyperll
       if (k & 1) == 1
         ((k >> 1) & 63) ^ 63
       else
-        number_of_leading_zeros(((k << p) & INT_MASK) + (31 - sp)) + 1
+        number_of_leading_zeros((k << (p + (31 - sp))) & INT_MASK) + 1
       end
     end
 
