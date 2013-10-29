@@ -92,7 +92,7 @@ module Hyperll
         size = Varint.read_unsigned_var_int(unpacked)
         rs_values = unpacked.pack("C*").unpack("N*")
 
-        new(p, sp, RegisterSet.new(2 ** p, rs_values)).tap { |hllp|
+        new(p, sp, rs_values).tap { |hllp|
           hllp.format = :normal
         }
       when 1 # :sparse

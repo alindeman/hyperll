@@ -17,12 +17,12 @@ typedef struct {
   int sparse_set_threshold;
   double alpha_mm;
 
-  register_set *set;
+  register_set *register_set;
   sparse_set *sparse_set;
 } hyperllp;
 
 void hyperllp_free(hyperllp *hllp) {
-  if (hllp->set) register_set_free(hllp->set);
+  if (hllp->register_set) register_set_free(hllp->register_set);
   if (hllp->sparse_set) sparse_set_free(hllp->sparse_set);
   free(hllp);
 }
@@ -33,8 +33,8 @@ void hyperllp_init(hyperllp *hllp, int p, int sp) {
   hllp->format = hllp->sp ? FORMAT_SPARSE : FORMAT_NORMAL;
 
   int count = 1 << p;
-  hllp->set = ALLOC(register_set);
-  register_set_init(hllp->set, count);
+  hllp->register_set = ALLOC(register_set);
+  register_set_init(hllp->register_set, count);
 
   if (sp > 0) {
     hllp->sparse_set_threshold = (int)(0.75 * count);
@@ -42,6 +42,8 @@ void hyperllp_init(hyperllp *hllp, int p, int sp) {
 
     int sparse_capacity = 1 << sp;
     sparse_set_init(hllp->sparse_set, sparse_capacity);
+  } else {
+    hllp->sparse_set = NULL;
   }
 
   switch(p) {
@@ -60,8 +62,8 @@ void hyperllp_init(hyperllp *hllp, int p, int sp) {
 }
 
 static VALUE rb_hyperllp_new(int argc, VALUE *argv, VALUE klass) {
-  VALUE p, sp, set, sparse_set;
-  rb_scan_args(argc, argv, "13", &p, &sp, &set, &sparse_set);
+  VALUE p, sp, register_set_values, sparse_set_values;
+  rb_scan_args(argc, argv, "13", &p, &sp, &register_set_values, &sparse_set_values);
 
   if (NIL_P(sp)) sp = INT2NUM(0);
 
@@ -72,6 +74,19 @@ static VALUE rb_hyperllp_new(int argc, VALUE *argv, VALUE klass) {
   if (hllp->p < 4) rb_raise(rb_eArgError, "p must be >= 4");
   if (hllp->sp >= 32) rb_raise(rb_eArgError, "sp must be < 32");
   if (hllp->sp != 0 && hllp->p > hllp->sp) rb_raise(rb_eArgError, "p must be <= sp");
+
+  if (!NIL_P(register_set_values)) {
+    Check_Type(register_set_values, T_ARRAY);
+
+    register_set *rset = hllp->register_set;
+    if (RARRAY_LEN(register_set_values) == rset->size) {
+      for (int i = 0; i < rset->size; i++) {
+        rset->values[i] = NUM2UINT(rb_ary_entry(register_set_values, i));
+      }
+    } else {
+      rb_raise(rb_eArgError, "initial register set values is not of the correct size");
+    }
+  }
 
   return hllpv;
 }
