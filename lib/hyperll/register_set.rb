@@ -1,11 +1,12 @@
+require_relative 'util'
+
 module Hyperll
   class RegisterSet
     include Enumerable
+    include Util
 
     LOG2_BITS_PER_WORD = 6
     REGISTER_SIZE = 5
-    INTEGER_SIZE = 32
-    INT_MASK = 0xFFFFFFFF
 
     attr_reader :count, :size
 
@@ -28,14 +29,15 @@ module Hyperll
       bucket = position / LOG2_BITS_PER_WORD
       shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD))
 
-      @values[bucket] = ((@values[bucket] & ~(0x1f << shift)) | (value << shift)) & INT_MASK
+      @values[bucket] = ((@values[bucket] & ~(0x1f * POWERS_OF_TWO[shift])) | (value * POWERS_OF_TWO[shift]))
+      @values[bucket] &= INT_MASK if @values[bucket] > INT_MASK
     end
 
     def [](position)
       bucket = position / LOG2_BITS_PER_WORD
       shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD))
 
-      return (@values[bucket] & (0x1f << shift)) >> shift
+      return (@values[bucket] & (0x1f * POWERS_OF_TWO[shift])) / POWERS_OF_TWO[shift]
     end
 
     def each
@@ -48,12 +50,13 @@ module Hyperll
     def update_if_greater(position, value)
       bucket = position / LOG2_BITS_PER_WORD
       shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
-      mask = (0x1f << shift) & INT_MASK
+      mask = (0x1f * POWERS_OF_TWO[shift])
 
       current_value = @values[bucket] & mask
-      new_value = value << shift
+      new_value = value * POWERS_OF_TWO[shift]
       if current_value < new_value
-        @values[bucket] = ((@values[bucket] & ~mask) | new_value) & INT_MASK
+        @values[bucket] = ((@values[bucket] & ~mask) | new_value)
+        @values[bucket] &= INT_MASK if @values[bucket] > INT_MASK
         true
       else
         false

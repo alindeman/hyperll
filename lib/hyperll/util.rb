@@ -1,6 +1,8 @@
 module Hyperll
   module Util
     INT_MASK = 0xFFFFFFFF
+    INTEGER_SIZE = 32
+
     POWERS_OF_TWO = 0.upto(32).map { |i| 2**i }.freeze
 
     def number_of_leading_zeros(x)
