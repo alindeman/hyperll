@@ -10,31 +10,31 @@ const int REGISTER_SIZE = 5;
 typedef struct {
   int count;
   int size;
-  int *values;
+  unsigned int *values;
 } register_set;
 
-void register_set_set(register_set *set, int position, int value) {
+void register_set_set(register_set *set, int position, unsigned int value) {
   int bucket = position / LOG2_BITS_PER_WORD;
   int shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
 
   set->values[bucket] = (set->values[bucket] & ~(0x1f << shift)) | (value << shift);
 }
 
-int register_set_get(register_set *set, int position) {
+unsigned int register_set_get(register_set *set, int position) {
   int bucket = position / LOG2_BITS_PER_WORD;
   int shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
-  return (set->values[bucket] & (0x1f << shift)) >> shift;
+  return (unsigned int)((set->values[bucket] & (0x1f << shift))) >> shift;
 }
 
-int register_set_update_if_greater(register_set *set, int position, int value) {
+int register_set_update_if_greater(register_set *set, int position, unsigned int value) {
   int bucket = position / LOG2_BITS_PER_WORD;
   int shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
-  int mask = 0x1f << shift;
+  unsigned int mask = 0x1f << shift;
 
-  long cur_val = set->values[bucket] & mask;
-  long new_val = value << shift;
-  if (cur_val < new_val) {
-    set->values[bucket] = (int)((set->values[bucket] & ~mask) | new_val);
+  unsigned long cur = set->values[bucket] & mask;
+  unsigned long new = value << shift;
+  if (cur < new) {
+    set->values[bucket] = (unsigned int)((set->values[bucket] & ~mask) | new);
     return 1;
   } else {
     return 0;
@@ -66,7 +66,7 @@ static VALUE rb_register_set_new(int argc, VALUE *argv, VALUE klass) {
   rb_scan_args(argc, argv, "11", &count, &values);
 
   register_set *set = ALLOC(register_set);
-  set->count = FIX2INT(count);
+  set->count = NUM2INT(count);
 
   int bits = set->count / LOG2_BITS_PER_WORD;
   if (bits == 0) {
@@ -78,13 +78,13 @@ static VALUE rb_register_set_new(int argc, VALUE *argv, VALUE klass) {
   }
 
   if (NIL_P(values)) {
-    set->values = (int*)calloc(set->size, sizeof(int));
+    set->values = (unsigned int*)calloc(set->size, sizeof(unsigned int));
   } else {
     Check_Type(values, T_ARRAY);
     if (RARRAY_LEN(values) == set->size) {
-      set->values = (int*)calloc(set->size, sizeof(int));
+      set->values = (unsigned int*)calloc(set->size, sizeof(unsigned int));
       for (int i = 0; i < set->size; i++) {
-        set->values[i] = FIX2INT(rb_ary_entry(values, i));
+        set->values[i] = NUM2UINT(rb_ary_entry(values, i));
       }
     } else {
       rb_raise(rb_eArgError, "initial set of values is not of the correct size");
@@ -100,7 +100,7 @@ static VALUE rb_register_set_index_set(VALUE self, VALUE position, VALUE value) 
 
   register_set *set;
   Data_Get_Struct(self, register_set, set);
-  register_set_set(set, FIX2INT(position), FIX2INT(value));
+  register_set_set(set, NUM2INT(position), NUM2UINT(value));
 
   return Qnil;
 }
@@ -110,7 +110,7 @@ static VALUE rb_register_set_index_get(VALUE self, VALUE position) {
 
   register_set *set;
   Data_Get_Struct(self, register_set, set);
-  return INT2FIX(register_set_get(set, FIX2INT(position)));
+  return UINT2NUM(register_set_get(set, NUM2INT(position)));
 }
 
 static VALUE rb_register_set_update_if_greater(VALUE self, VALUE position, VALUE value) {
@@ -119,7 +119,7 @@ static VALUE rb_register_set_update_if_greater(VALUE self, VALUE position, VALUE
 
   register_set *set;
   Data_Get_Struct(self, register_set, set);
-  int rv = register_set_update_if_greater(set, FIX2INT(position), FIX2INT(value));
+  int rv = register_set_update_if_greater(set, NUM2INT(position), NUM2UINT(value));
 
   return rv ? Qtrue : Qfalse;
 }
@@ -145,7 +145,7 @@ static VALUE rb_register_set_each(VALUE self) {
   Data_Get_Struct(self, register_set, set);
 
   for (int i = 0; i < set->size; i++) {
-    rb_yield(INT2FIX(register_set_get(set, i)));
+    rb_yield(UINT2NUM(register_set_get(set, i)));
   }
 
   return self;
