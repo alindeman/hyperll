@@ -87,7 +87,6 @@ typedef struct {
   int format;
   int p;
   int sp;
-  int sparse_set_threshold;
   double alpha_mm;
 
   register_set *register_set;
@@ -115,10 +114,9 @@ void hyperllp_init(hyperllp *hllp, int p, int sp) {
   register_set_init(hllp->register_set, count);
 
   if (sp > 0) {
-    hllp->sparse_set_threshold = (int)(0.75 * count);
     hllp->sparse_set = ALLOC(sparse_set);
 
-    int sparse_capacity = 1 << sp;
+    int sparse_capacity = (int)(0.75 * count);
     sparse_set_init(hllp->sparse_set, sparse_capacity);
   } else {
     hllp->sparse_set = NULL;
