@@ -252,11 +252,15 @@ uint32_t hyperllp_decode_run_length(hyperllp *hllp, uint32_t k) {
 }
 
 void hyperllp_merge_from_sparse(hyperllp *hllp, hyperllp *other) {
-  for (int i = 0; i < other->sparse_set->size; i++) {
-    uint32_t k = other->sparse_set->values[i];
+  register_set *rset = hllp->register_set;
+  sparse_set *sset = other->sparse_set;
+  int size = sset->size;
+
+  for (int i = 0; i < size; i++) {
+    uint32_t k = sset->values[i];
     int idx = hyperllp_index(other, k);
     uint32_t r = hyperllp_decode_run_length(other, k);
-    register_set_update_if_greater(hllp->register_set, idx, r);
+    register_set_update_if_greater(rset, idx, r);
   }
 }
 
@@ -265,15 +269,19 @@ void hyperllp_convert_to_normal(hyperllp *hllp) {
     return;
   }
 
-  for (int i = 0; i < hllp->sparse_set->size; i++) {
-    uint32_t k = hllp->sparse_set->values[i];
+  register_set *rset = hllp->register_set;
+  sparse_set *sset = hllp->sparse_set;
+  int size = sset->size;
+
+  for (int i = 0; i < size; i++) {
+    uint32_t k = sset->values[i];
     int idx = hyperllp_index(hllp, k);
     uint32_t r = hyperllp_decode_run_length(hllp, k);
-    register_set_update_if_greater(hllp->register_set, idx, r);
+    register_set_update_if_greater(rset, idx, r);
   }
 
   hllp->format = FORMAT_NORMAL;
-  free(hllp->sparse_set);
+  free(sset);
   hllp->sparse_set = NULL;
 }
 

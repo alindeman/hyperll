@@ -51,14 +51,18 @@ int register_set_update_if_greater(register_set *set, int position, uint32_t val
 }
 
 void register_set_merge(register_set *set, register_set *other) {
-  for (int bucket = 0; bucket < set->size; bucket++) {
-    int word = 0;
-    for (int j = 0; j < LOG2_BITS_PER_WORD; j++) {
-      int mask = 0x1f << (REGISTER_SIZE * j);
+  int size = set->size;
+  for (int bucket = 0; bucket < size; bucket++) {
+    uint32_t sval = set->values[bucket];
+    uint32_t oval = other->values[bucket];
+    uint32_t word = 0;
 
-      int thisVal = (set->values[bucket] & mask);
-      int thatVal = (other->values[bucket] & mask);
-      word |= (thisVal < thatVal) ? thatVal : thisVal;
+    for (int j = 0; j < LOG2_BITS_PER_WORD; j++) {
+      uint32_t mask = 0x1f << (REGISTER_SIZE * j);
+
+      uint32_t thisval = (sval & mask);
+      uint32_t thatval = (oval & mask);
+      word |= (thisval < thatval) ? thatval : thisval;
     }
     set->values[bucket] = word;
   }
