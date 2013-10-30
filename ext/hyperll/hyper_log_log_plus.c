@@ -427,9 +427,14 @@ static VALUE rb_hyperllp_raw_sparse_set(VALUE self) {
   hyperllp *hllp;
   Data_Get_Struct(self, hyperllp, hllp);
 
-  VALUE ary = rb_ary_new2(hllp->sparse_set->size);
-  for (int i = 0; i < hllp->sparse_set->size; i++) {
-    rb_ary_store(ary, i, UINT2NUM(hllp->sparse_set->values[i]));
+  VALUE ary;
+  if (hllp->sparse_set) {
+    ary = rb_ary_new2(hllp->sparse_set->size);
+    for (int i = 0; i < hllp->sparse_set->size; i++) {
+      rb_ary_store(ary, i, UINT2NUM(hllp->sparse_set->values[i]));
+    }
+  } else {
+    ary = rb_ary_new();
   }
 
   return ary;
