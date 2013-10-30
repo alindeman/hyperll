@@ -9,5 +9,4 @@ if RbConfig::MAKEFILE_CONFIG['CC'] =~ /gcc|clang/
   $CFLAGS << " -Wall -std=c99"
 end
 
-dir_config('hyperll')
-create_makefile('hyperll')
+create_makefile('hyperll/hyperll')
