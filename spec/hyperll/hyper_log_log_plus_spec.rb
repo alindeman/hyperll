@@ -213,11 +213,11 @@ module Hyperll
         # Serialization after offering [2, 6, 19, 29, 41, 48]
         hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQbwdJz0Afq4AbSZAqxX4i4="))
 
-
         expect(hllp.cardinality).to eq(9)
         expect(hllp2.cardinality).to eq(6)
 
-        # The set intersection of hllp and hllp2 has one element, 41, so this should be 14.
+        # The set intersection of hllp and hllp2 has one element, 41, so after
+        # merging the cardinality should be 14.
         hllp.merge(hllp2)
         expect(hllp.cardinality).to eq(14)
       end
