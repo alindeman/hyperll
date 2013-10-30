@@ -3,14 +3,15 @@
 #include <stdlib.h>
 #include "sparse_set.h"
 
-void sparse_set_init(sparse_set *set, int capacity) {
+void sparse_set_init(sparse_set *set, int sm, int capacity) {
+  set->sm = sm;
   set->capacity = capacity;
   set->size = 0;
   set->values = (uint32_t*)calloc(set->capacity, sizeof(uint32_t));
 }
 
 int sparse_set_cardinality(sparse_set *set) {
-  return (int)(set->capacity * log(((double)set->capacity) / (set->capacity - set->size)));
+  return (int)round(set->sm * log(((double)set->sm) / (set->sm - set->size)));
 }
 
 uint32_t sparse_set_sparse_index(uint32_t k) {

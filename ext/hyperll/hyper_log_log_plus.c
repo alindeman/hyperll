@@ -116,8 +116,9 @@ void hyperllp_init(hyperllp *hllp, int p, int sp) {
   if (sp > 0) {
     hllp->sparse_set = ALLOC(sparse_set);
 
-    int sparse_capacity = (int)(0.75 * count);
-    sparse_set_init(hllp->sparse_set, sparse_capacity);
+    int sm = 1 << sp;
+    int capacity = (int)(0.75 * count);
+    sparse_set_init(hllp->sparse_set, sm, capacity);
   } else {
     hllp->sparse_set = NULL;
   }

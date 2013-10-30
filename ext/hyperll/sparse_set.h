@@ -4,12 +4,13 @@
 #include <stdint.h>
 
 typedef struct {
+  int sm;
   int capacity;
   int size;
   uint32_t *values;
 } sparse_set;
 
-void sparse_set_init(sparse_set *set, int capacity);
+void sparse_set_init(sparse_set *set, int sm, int capacity);
 int sparse_set_cardinality(sparse_set *set);
 
 // Merges two sparse sets together.
