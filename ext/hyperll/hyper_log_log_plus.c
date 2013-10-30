@@ -8,8 +8,8 @@
 extern VALUE rb_mHyperll;
 VALUE rb_cHyperllp;
 
-const int FORMAT_NORMAL = 0;
-const int FORMAT_SPARSE = 1;
+#define FORMAT_NORMAL 0
+#define FORMAT_SPARSE 1
 
 const double THRESHOLD_DATA[] = {
   10.0, 20.0, 40.0, 80.0, 220.0, 400.0, 900.0, 1800.0, 3100.0, 6500.0,
