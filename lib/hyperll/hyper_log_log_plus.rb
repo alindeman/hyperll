@@ -35,11 +35,13 @@ module Hyperll
       case format
       when :normal
         str << Varint.write_unsigned_var_int(0).pack("C*")
-        str << Varint.write_unsigned_var_int(@register_set.size * 4).pack("C*")
-        str << @register_set.serialize
+
+        rs_bytes = raw_register_set
+        str << Varint.write_unsigned_var_int(rs_bytes.length * 4).pack("C*")
+        str << rs_bytes.pack("N*")
       when :sparse
         str << Varint.write_unsigned_var_int(1).pack("C*")
-        str << DeltaBytes.compress(@sparse_set).pack("C*")
+        str << DeltaBytes.compress(raw_sparse_set).pack("C*")
       end
 
       str
