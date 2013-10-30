@@ -11,6 +11,12 @@ typedef struct {
 
 void sparse_set_init(sparse_set *set, int capacity);
 int sparse_set_cardinality(sparse_set *set);
+
+// Merges two sparse sets together.
+//
+// Returns 0 on success; -1 if the sparse set would grow too large
+int sparse_set_merge(sparse_set *set, sparse_set *other);
+
 void sparse_set_free(sparse_set *set);
 
 #endif

@@ -162,6 +162,28 @@ static VALUE rb_hyperllp_cardinality(VALUE self) {
   return INT2NUM(0);
 }
 
+static VALUE rb_hyperllp_merge(VALUE self, VALUE other) {
+  hyperllp *hllp;
+  Data_Get_Struct(self, hyperllp, hllp);
+
+  hyperllp *ohllp;
+  Data_Get_Struct(other, hyperllp, ohllp);
+  if (!ohllp || hllp->p != ohllp->p) {
+    rb_raise(rb_eArgError, "cannot merge estimators of different sizes");
+    return Qnil;
+  }
+
+  if (hllp->format == FORMAT_SPARSE || ohllp->format == FORMAT_SPARSE) {
+    if (sparse_set_merge(hllp->sparse_set, ohllp->sparse_set) < 0) {
+      // TODO: convert to normal and try merge again
+    }
+
+    return self;
+  } else {
+    rb_notimplement();
+  }
+}
+
 void Init_hyperll_hyper_log_log_plus(void) {
   rb_cHyperllp = rb_define_class_under(rb_mHyperll, "HyperLogLogPlus", rb_cObject);
 
@@ -172,4 +194,5 @@ void Init_hyperll_hyper_log_log_plus(void) {
   rb_define_method(rb_cHyperllp, "p", rb_hyperllp_p, 0);
   rb_define_method(rb_cHyperllp, "sp", rb_hyperllp_sp, 0);
   rb_define_method(rb_cHyperllp, "cardinality", rb_hyperllp_cardinality, 0);
+  rb_define_method(rb_cHyperllp, "merge", rb_hyperllp_merge, 1);
 }

@@ -103,31 +103,6 @@ module Hyperll
       end
     end
 
-    def merge(*others)
-      raise "Cannot merge hyperloglogs of different sizes" unless others.all? { |o| o.p == p }
-
-      others.each do |other|
-        case [format, other.format]
-        when [:sparse, :sparse]
-          @sparse_set = merge_sparse_set(other.sparse_set)
-          convert_to_normal_if_above_sparse_threshold
-        when [:normal, :normal]
-          @register_set.merge(other.register_set)
-        when [:sparse, :normal]
-          convert_to_normal
-          @register_set.merge(other.register_set)
-        when [:normal, :sparse]
-          other.sparse_set.each do |value|
-            idx = other.index(value)
-            r = other.decode_run_length(value)
-            @register_set.update_if_greater(idx, r)
-          end
-        end
-      end
-
-      self
-    end
-
     def convert_to_normal
       return if format == :normal
 
@@ -239,50 +214,6 @@ module Hyperll
       else
         estimate_prime.round
       end
-    end
-
-    def merge_sparse_set(other_sparse_set)
-      new_set = []
-
-      i, j = 0, 0
-      while i < @sparse_set.length || j < other_sparse_set.length
-        if i >= @sparse_set.length
-          other_val = other_sparse_set[j]
-          new_set << other_val
-
-          j = consume_duplicates(other_sparse_set, sparse_index(other_val), j + 1)
-        elsif j >= other_sparse_set.length
-          val = @sparse_set[i]
-          new_set << val
-          i += 1
-        else
-          val, other_val = @sparse_set[i], other_sparse_set[j]
-          if sparse_index(val) == sparse_index(other_val)
-            new_set << [val, other_val].min
-            j = consume_duplicates(other_sparse_set, sparse_index(other_val), j + 1)
-            i += 1
-          elsif val < other_val
-            new_set << val
-            i += 1
-          else
-            new_set << other_val
-            j = consume_duplicates(other_sparse_set, sparse_index(other_val), j + 1)
-          end
-        end
-      end
-
-      new_set
-    end
-
-    def consume_duplicates(sparse_set, index, start)
-      while start < sparse_set.length
-        nxt_val = sparse_set[start]
-        return start if index != sparse_index(nxt_val)
-
-        start += 1
-      end
-
-      start
     end
 
     def sparse_index(k)
