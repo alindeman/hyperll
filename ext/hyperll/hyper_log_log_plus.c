@@ -338,11 +338,13 @@ static VALUE rb_hyperllp_merge(VALUE self, VALUE other) {
     if (sparse_set_merge(hllp->sparse_set, ohllp->sparse_set) < 0) {
       // TODO: convert to normal and try merge again
     }
-
-    return self;
+  } else if (hllp->format == FORMAT_NORMAL && ohllp->format == FORMAT_NORMAL) {
+    register_set_merge(hllp->register_set, ohllp->register_set);
   } else {
     rb_notimplement();
   }
+
+  return self;
 }
 
 void Init_hyperll_hyper_log_log_plus(void) {
