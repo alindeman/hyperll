@@ -32,7 +32,7 @@ void register_set_set(register_set *set, int position, uint32_t value) {
 uint32_t register_set_get(register_set *set, int position) {
   int bucket = position / LOG2_BITS_PER_WORD;
   int shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
-  return (uint32_t)((set->values[bucket] & (0x1f << shift))) >> shift;
+  return (uint32_t)(((set->values[bucket] & (0x1f << shift))) >> shift);
 }
 
 int register_set_update_if_greater(register_set *set, int position, uint32_t value) {
@@ -40,8 +40,8 @@ int register_set_update_if_greater(register_set *set, int position, uint32_t val
   int shift = REGISTER_SIZE * (position - (bucket * LOG2_BITS_PER_WORD));
   uint32_t mask = 0x1f << shift;
 
-  unsigned long cur = set->values[bucket] & mask;
-  unsigned long new = value << shift;
+  uint64_t cur = set->values[bucket] & mask;
+  uint64_t new = value << shift;
   if (cur < new) {
     set->values[bucket] = (uint32_t)((set->values[bucket] & ~mask) | new);
     return 1;
@@ -141,7 +141,7 @@ static VALUE rb_register_set_each(VALUE self) {
   register_set *set;
   Data_Get_Struct(self, register_set, set);
 
-  for (int i = 0; i < set->size; i++) {
+  for (int i = 0; i < set->count; i++) {
     rb_yield(UINT2NUM(register_set_get(set, i)));
   }
 
@@ -169,6 +169,13 @@ static VALUE rb_register_set_serialize(VALUE self) {
   return rb_str_new(str, strsize);
 }
 
+static VALUE rb_register_set_size(VALUE self) {
+  register_set *set;
+  Data_Get_Struct(self, register_set, set);
+
+  return INT2NUM(set->size);
+}
+
 void Init_hyperll_register_set(void) {
   rb_cRegisterSet = rb_define_class_under(rb_mHyperll, "RegisterSet", rb_cObject);
   rb_include_module(rb_cRegisterSet, rb_mEnumerable);
@@ -181,4 +188,5 @@ void Init_hyperll_register_set(void) {
   rb_define_method(rb_cRegisterSet, "merge", rb_register_set_merge, 1);
   rb_define_method(rb_cRegisterSet, "each", rb_register_set_each, 0);
   rb_define_method(rb_cRegisterSet, "serialize", rb_register_set_serialize, 0);
+  rb_define_method(rb_cRegisterSet, "size", rb_register_set_size, 0);
 }
