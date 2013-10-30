@@ -6,7 +6,7 @@ $CFLAGS << " #{ENV["CFLAGS"]}"
 $CFLAGS << " -g"
 if RbConfig::MAKEFILE_CONFIG['CC'] =~ /gcc|clang/
   $CFLAGS << " -O3" unless $CFLAGS[/-O\d/]
-  $CFLAGS << " -Wall"
+  $CFLAGS << " -Wall -std=c99"
 end
 
 dir_config('hyperll')
