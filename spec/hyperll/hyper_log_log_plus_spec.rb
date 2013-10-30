@@ -270,5 +270,17 @@ module Hyperll
         expect(hllp.cardinality).to eq(8) # 3 + 3 = 8; that's how it goes with hll
       end
     end
+
+    context 'merging multiple at a time' do
+      it 'merges' do
+        hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 10, 1, 1, -110, 10].pack("C*"))
+        hllp2 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 10, 1, 1, -46, 5].pack("C*"))
+        hllp3 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 10, 1, 1, -124, 6].pack("C*"))
+
+        hllp.merge(hllp2, hllp3)
+        expect(hllp.format).to eq(:sparse)
+        expect(hllp.cardinality).to eq(3) # 1 + 1 + 1 = 3
+      end
+    end
   end
 end

@@ -389,18 +389,25 @@ static VALUE rb_hyperllp_cardinality(VALUE self) {
   return INT2NUM(hyperllp_cardinality(hllp));
 }
 
-static VALUE rb_hyperllp_merge(VALUE self, VALUE other) {
+static VALUE rb_hyperllp_merge(int argc, VALUE *argv, VALUE self) {
+  VALUE others;
+  rb_scan_args(argc, argv, "*", &others);
+
   hyperllp *hllp;
   Data_Get_Struct(self, hyperllp, hllp);
 
-  hyperllp *ohllp;
-  Data_Get_Struct(other, hyperllp, ohllp);
-  if (!ohllp || hllp->p != ohllp->p) {
-    rb_raise(rb_eArgError, "cannot merge estimators of different sizes");
-    return Qnil;
+  int len = RARRAY_LEN(others);
+  for (int i = 0; i < len; i++) {
+    hyperllp *ohllp;
+    Data_Get_Struct(rb_ary_entry(others, i), hyperllp, ohllp);
+    if (!ohllp || hllp->p != ohllp->p) {
+      rb_raise(rb_eArgError, "cannot merge estimators of different sizes");
+      return Qnil;
+    } else {
+      hyperllp_merge(hllp, ohllp);
+    }
   }
 
-  hyperllp_merge(hllp, ohllp);
   return self;
 }
 
@@ -446,7 +453,7 @@ void Init_hyperll_hyper_log_log_plus(void) {
   rb_define_method(rb_cHyperllp, "p", rb_hyperllp_p, 0);
   rb_define_method(rb_cHyperllp, "sp", rb_hyperllp_sp, 0);
   rb_define_method(rb_cHyperllp, "cardinality", rb_hyperllp_cardinality, 0);
-  rb_define_method(rb_cHyperllp, "merge", rb_hyperllp_merge, 1);
+  rb_define_method(rb_cHyperllp, "merge", rb_hyperllp_merge, -1);
   rb_define_method(rb_cHyperllp, "convert_to_normal", rb_hyperllp_convert_to_normal, 0);
 
   rb_define_protected_method(rb_cHyperllp, "raw_register_set", rb_hyperllp_raw_register_set, 0);
