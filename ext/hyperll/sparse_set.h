@@ -17,6 +17,7 @@ int sparse_set_cardinality(sparse_set *set);
 // Returns 0 on success; -1 if the sparse set would grow too large
 int sparse_set_merge(sparse_set *set, sparse_set *other);
 
+uint32_t sparse_set_sparse_index(uint32_t k);
 void sparse_set_free(sparse_set *set);
 
 #endif

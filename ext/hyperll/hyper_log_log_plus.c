@@ -229,6 +229,52 @@ int hyperllp_cardinality(hyperllp *hllp) {
   return 0;
 }
 
+int hyperllp_num_leading_zeroes(uint32_t x) {
+  if (x == 0) return 32;
+  int n = 0;
+  if (x <= 0x0000FFFF) {n = n +16; x = x <<16;}
+  if (x <= 0x00FFFFFF) {n = n + 8; x = x << 8;}
+  if (x <= 0x0FFFFFFF) {n = n + 4; x = x << 4;}
+  if (x <= 0x3FFFFFFF) {n = n + 2; x = x << 2;}
+  if (x <= 0x7FFFFFFF) {n = n + 1;}
+  return n;
+}
+
+uint32_t hyperllp_index(hyperllp *hllp, uint32_t k) {
+  k = sparse_set_sparse_index(k);
+  return k >> (hllp->sp - hllp->p);
+}
+
+uint32_t hyperllp_decode_run_length(hyperllp *hllp, uint32_t k) {
+  if ((k & 1) == 1) {
+    return ((k >> 1) & 63) ^ 63;
+  } else {
+    return hyperllp_num_leading_zeroes(k << (hllp->p + (31 - hllp->sp))) + 1;
+  }
+}
+
+void hyperllp_merge_from_sparse(hyperllp *hllp, hyperllp *other) {
+  for (int i = 0; i < other->sparse_set->size; i++) {
+    uint32_t k = other->sparse_set->values[i];
+    int idx = hyperllp_index(other, k);
+    uint32_t r = hyperllp_decode_run_length(other, k);
+    register_set_update_if_greater(hllp->register_set, idx, r);
+  }
+}
+
+void hyperllp_merge(hyperllp *hllp, hyperllp *other) {
+  if (hllp->format == FORMAT_SPARSE && other->format == FORMAT_SPARSE) {
+    if (sparse_set_merge(hllp->sparse_set, other->sparse_set) < 0) {
+      // TODO: convert to normal and try merge again
+    }
+  } else if (hllp->format == FORMAT_NORMAL && other->format == FORMAT_NORMAL) {
+    register_set_merge(hllp->register_set, other->register_set);
+  } else if (hllp->format == FORMAT_NORMAL && other->format == FORMAT_SPARSE) {
+    hyperllp_merge_from_sparse(hllp, other);
+  } else if (hllp->format == FORMAT_SPARSE && other->format == FORMAT_NORMAL) {
+  }
+}
+
 static VALUE rb_hyperllp_new(int argc, VALUE *argv, VALUE klass) {
   VALUE p, sp, register_set_values, sparse_set_values;
   rb_scan_args(argc, argv, "13", &p, &sp, &register_set_values, &sparse_set_values);
@@ -334,16 +380,7 @@ static VALUE rb_hyperllp_merge(VALUE self, VALUE other) {
     return Qnil;
   }
 
-  if (hllp->format == FORMAT_SPARSE && ohllp->format == FORMAT_SPARSE) {
-    if (sparse_set_merge(hllp->sparse_set, ohllp->sparse_set) < 0) {
-      // TODO: convert to normal and try merge again
-    }
-  } else if (hllp->format == FORMAT_NORMAL && ohllp->format == FORMAT_NORMAL) {
-    register_set_merge(hllp->register_set, ohllp->register_set);
-  } else {
-    rb_notimplement();
-  }
-
+  hyperllp_merge(hllp, ohllp);
   return self;
 }
 
