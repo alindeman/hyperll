@@ -262,16 +262,33 @@ void hyperllp_merge_from_sparse(hyperllp *hllp, hyperllp *other) {
   }
 }
 
+void hyperllp_convert_to_normal(hyperllp *hllp) {
+  for (int i = 0; i < hllp->sparse_set->size; i++) {
+    uint32_t k = hllp->sparse_set->values[i];
+    int idx = hyperllp_index(hllp, k);
+    uint32_t r = hyperllp_decode_run_length(hllp, k);
+    register_set_update_if_greater(hllp->register_set, idx, r);
+  }
+
+  hllp->format = FORMAT_NORMAL;
+  free(hllp->sparse_set);
+  hllp->sparse_set = NULL;
+}
+
 void hyperllp_merge(hyperllp *hllp, hyperllp *other) {
   if (hllp->format == FORMAT_SPARSE && other->format == FORMAT_SPARSE) {
     if (sparse_set_merge(hllp->sparse_set, other->sparse_set) < 0) {
-      // TODO: convert to normal and try merge again
+      // Over capacity: convert to normal and try merge again
+      hyperllp_convert_to_normal(hllp);
+      hyperllp_merge(hllp, other);
     }
   } else if (hllp->format == FORMAT_NORMAL && other->format == FORMAT_NORMAL) {
     register_set_merge(hllp->register_set, other->register_set);
   } else if (hllp->format == FORMAT_NORMAL && other->format == FORMAT_SPARSE) {
     hyperllp_merge_from_sparse(hllp, other);
   } else if (hllp->format == FORMAT_SPARSE && other->format == FORMAT_NORMAL) {
+    hyperllp_convert_to_normal(hllp);
+    hyperllp_merge(hllp, other);
   }
 }
 
