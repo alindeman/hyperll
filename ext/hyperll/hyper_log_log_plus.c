@@ -263,6 +263,10 @@ void hyperllp_merge_from_sparse(hyperllp *hllp, hyperllp *other) {
 }
 
 void hyperllp_convert_to_normal(hyperllp *hllp) {
+  if (hllp->format == FORMAT_NORMAL) {
+    return;
+  }
+
   for (int i = 0; i < hllp->sparse_set->size; i++) {
     uint32_t k = hllp->sparse_set->values[i];
     int idx = hyperllp_index(hllp, k);
@@ -425,6 +429,14 @@ static VALUE rb_hyperllp_raw_sparse_set(VALUE self) {
   return ary;
 }
 
+static VALUE rb_hyperllp_convert_to_normal(VALUE self) {
+  hyperllp *hllp;
+  Data_Get_Struct(self, hyperllp, hllp);
+
+  hyperllp_convert_to_normal(hllp);
+  return self;
+}
+
 void Init_hyperll_hyper_log_log_plus(void) {
   rb_cHyperllp = rb_define_class_under(rb_mHyperll, "HyperLogLogPlus", rb_cObject);
 
@@ -436,6 +448,7 @@ void Init_hyperll_hyper_log_log_plus(void) {
   rb_define_method(rb_cHyperllp, "sp", rb_hyperllp_sp, 0);
   rb_define_method(rb_cHyperllp, "cardinality", rb_hyperllp_cardinality, 0);
   rb_define_method(rb_cHyperllp, "merge", rb_hyperllp_merge, 1);
+  rb_define_method(rb_cHyperllp, "convert_to_normal", rb_hyperllp_convert_to_normal, 0);
 
   rb_define_protected_method(rb_cHyperllp, "raw_register_set", rb_hyperllp_raw_register_set, 0);
   rb_define_protected_method(rb_cHyperllp, "raw_sparse_set", rb_hyperllp_raw_sparse_set, 0);
