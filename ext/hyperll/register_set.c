@@ -81,7 +81,7 @@ static VALUE rb_register_set_new(int argc, VALUE *argv, VALUE klass) {
     Check_Type(values, T_ARRAY);
     if (RARRAY_LEN(values) == set->size) {
       for (int i = 0; i < set->size; i++) {
-        set->values[i] = NUM2UINT(rb_ary_entry(values, i));
+        set->values[i] = NUM2ULONG(rb_ary_entry(values, i));
       }
     } else {
       rb_raise(rb_eArgError, "initial set of values is not of the correct size");
@@ -97,7 +97,7 @@ static VALUE rb_register_set_index_set(VALUE self, VALUE position, VALUE value) 
 
   register_set *set;
   Data_Get_Struct(self, register_set, set);
-  register_set_set(set, NUM2INT(position), NUM2UINT(value));
+  register_set_set(set, NUM2INT(position), NUM2ULONG(value));
 
   return Qnil;
 }
@@ -116,7 +116,7 @@ static VALUE rb_register_set_update_if_greater(VALUE self, VALUE position, VALUE
 
   register_set *set;
   Data_Get_Struct(self, register_set, set);
-  int rv = register_set_update_if_greater(set, NUM2INT(position), NUM2UINT(value));
+  int rv = register_set_update_if_greater(set, NUM2INT(position), NUM2ULONG(value));
 
   return rv ? Qtrue : Qfalse;
 }

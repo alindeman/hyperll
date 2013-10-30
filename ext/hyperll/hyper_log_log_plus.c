@@ -315,7 +315,7 @@ static VALUE rb_hyperllp_new(int argc, VALUE *argv, VALUE klass) {
     register_set *rset = hllp->register_set;
     if (RARRAY_LEN(register_set_values) == rset->size) {
       for (int i = 0; i < rset->size; i++) {
-        rset->values[i] = NUM2UINT(rb_ary_entry(register_set_values, i));
+        rset->values[i] = NUM2ULONG(rb_ary_entry(register_set_values, i));
       }
     } else {
       rb_raise(rb_eArgError, "initial register set values is not of the correct size");
@@ -329,7 +329,7 @@ static VALUE rb_hyperllp_new(int argc, VALUE *argv, VALUE klass) {
     if (RARRAY_LEN(sparse_set_values) <= sset->capacity) {
       sset->size = RARRAY_LEN(sparse_set_values);
       for (int i = 0; i < sset->size; i++) {
-        sset->values[i] = NUM2UINT(rb_ary_entry(sparse_set_values, i));
+        sset->values[i] = NUM2ULONG(rb_ary_entry(sparse_set_values, i));
       }
     } else {
       rb_raise(rb_eArgError, "initial sparse set values have too many values");
