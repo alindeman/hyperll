@@ -45,14 +45,16 @@ int sparse_set_merge(sparse_set *set, sparse_set *other) {
     } else if (s >= ssize) {
       values[size++] = ovals[o++];
     } else {
-      int sval = svals[s];
-      int oval = ovals[o];
+      uint32_t sval = svals[s];
+      uint32_t sidx = sparse_set_sparse_index(sval);
+      uint32_t oval = ovals[o];
+      uint32_t oidx = sparse_set_sparse_index(oval);
 
-      if (sparse_set_sparse_index(sval) == sparse_set_sparse_index(oval)) {
+      if (sidx == oidx) {
         values[size++] = sval < oval ? sval : oval;
         s++;
         o++;
-      } else if (sval < oval) {
+      } else if (sidx < oidx) {
         values[size++] = sval;
         s++;
       } else {
