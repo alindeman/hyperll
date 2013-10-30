@@ -23,35 +23,41 @@ uint32_t sparse_set_sparse_index(uint32_t k) {
 }
 
 int sparse_set_merge(sparse_set *set, sparse_set *other) {
-  uint32_t *values = (uint32_t*)calloc(set->capacity, sizeof(uint32_t));
+  uint32_t *svals = set->values;
+  int ssize = set->size;
+  uint32_t *ovals = other->values;
+  int osize = other->size;
 
-  // i tracks set->values, j tracks other->values, size tracks values
-  int i = 0, j = 0, size = 0;
-  while (i < set->size || j < other->size) {
+  int capacity = set->capacity;
+  uint32_t *values = (uint32_t*)calloc(capacity, sizeof(uint32_t));
+
+  // s tracks svals, o tracks ovals, size tracks values
+  int s = 0, o = 0, size = 0;
+  while (s < ssize || o < osize) {
     // Check that we don't grow over capacity
-    if (size >= set->capacity) {
+    if (size >= capacity) {
       free(values);
       return -1;
     }
 
-    if (j >= other->size) {
-      values[size++] = set->values[i++];
-    } else if (i >= set->size) {
-      values[size++] = other->values[j++];
+    if (o >= osize) {
+      values[size++] = svals[s++];
+    } else if (s >= ssize) {
+      values[size++] = ovals[o++];
     } else {
-      int sval = set->values[i];
-      int oval = other->values[j];
+      int sval = svals[s];
+      int oval = ovals[o];
 
       if (sparse_set_sparse_index(sval) == sparse_set_sparse_index(oval)) {
         values[size++] = sval < oval ? sval : oval;
-        i++;
-        j++;
+        s++;
+        o++;
       } else if (sval < oval) {
         values[size++] = sval;
-        i++;
+        s++;
       } else {
         values[size++] = oval;
-        j++;
+        o++;
       }
     }
   }

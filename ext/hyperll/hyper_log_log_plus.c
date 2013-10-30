@@ -281,7 +281,7 @@ void hyperllp_convert_to_normal(hyperllp *hllp) {
   }
 
   hllp->format = FORMAT_NORMAL;
-  free(sset);
+  free(hllp->sparse_set);
   hllp->sparse_set = NULL;
 }
 
