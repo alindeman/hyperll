@@ -14,6 +14,8 @@ module Hyperll
 
     def self.write_unsigned_var_int(value)
       bytes = []
+
+      value = [value].pack("N").unpack("N").first
       while (value & 0xFFFFFF80) != 0
         bytes << ((value & 0x7F) | 0x80)
         value >>= 7
