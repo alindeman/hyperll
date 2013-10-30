@@ -206,6 +206,22 @@ module Hyperll
         expect(hllp.cardinality).to eq(6)
       end
 
+      it 'merges and keeps the cardinality exact, handling elements that are common to both sets' do
+        # Serialization after offering [12, 13, 22, 34, 38, 40, 41, 46, 49]
+        hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQnMYsoMtgak9AGMiwK8VbKiAYmU0wPVwK38Dw=="))
+
+        # Serialization after offering [2, 6, 19, 29, 41, 48]
+        hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQbwdJz0Afq4AbSZAqxX4i4="))
+
+
+        expect(hllp.cardinality).to eq(9)
+        expect(hllp2.cardinality).to eq(6)
+
+        # The set intersection of hllp and hllp2 has one element, 41, so this should be 14.
+        hllp.merge(hllp2)
+        expect(hllp.cardinality).to eq(14)
+      end
+
       it 'merges and keeps the cardinality exact' do
         hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQOwX+yBA7TzAw=="))
         hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQ7SKbociFqGigLUL9oagCWmC+IdlBqkE8g7jFiCnwE="))
