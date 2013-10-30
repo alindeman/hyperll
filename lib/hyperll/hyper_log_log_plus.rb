@@ -1,4 +1,3 @@
-require_relative 'varint'
 require_relative 'murmur_hash'
 require_relative 'delta_bytes'
 

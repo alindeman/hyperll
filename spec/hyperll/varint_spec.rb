@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'hyperll/varint'
+require 'hyperll'
 
 module Hyperll
   describe Varint do

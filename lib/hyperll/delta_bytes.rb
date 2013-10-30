@@ -1,5 +1,3 @@
-require_relative 'varint'
-
 module Hyperll
   class DeltaBytes
     def self.compress(bytes)

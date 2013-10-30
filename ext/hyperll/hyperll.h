@@ -11,5 +11,6 @@
 // Initialization functions
 void Init_hyperll_register_set(void);
 void Init_hyperll_hyper_log_log_plus(void);
+void Init_hyperll_varint(void);
 
 #endif
