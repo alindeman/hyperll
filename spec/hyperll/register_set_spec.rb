@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'hyperll/register_set'
+require 'hyperll'
 
 module Hyperll
   describe RegisterSet do
@@ -67,6 +67,23 @@ module Hyperll
       rs.each_with_index do |value, index|
         expect(value).to eq(merged[index])
       end
+    end
+
+    it "serializes to a string" do
+      rs = RegisterSet.new(10)
+      rs[0] = 2
+      rs[1] = 3
+      rs[2] = 4
+
+      expect(rs.serialize).to eq("\x00\x00\x10b\x00\x00\x00\x00".force_encoding("ASCII-8BIT"))
+    end
+
+    it "unserializes from a string" do
+      rs = RegisterSet.new(10, "\x00\x00\x10b\x00\x00\x00\x00".unpack("N*"))
+
+      expect(rs[0]).to eq(2)
+      expect(rs[1]).to eq(3)
+      expect(rs[2]).to eq(4)
     end
   end
 end

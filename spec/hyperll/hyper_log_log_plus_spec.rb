@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'base64'
-require 'hyperll/hyper_log_log_plus'
+require 'hyperll'
+require 'json'
 
 module Hyperll
   describe HyperLogLogPlus do
@@ -206,6 +207,22 @@ module Hyperll
         expect(hllp.cardinality).to eq(6)
       end
 
+      it 'merges and keeps the cardinality exact, handling elements that are common to both sets' do
+        # Serialization after offering [12, 13, 22, 34, 38, 40, 41, 46, 49]
+        hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQnMYsoMtgak9AGMiwK8VbKiAYmU0wPVwK38Dw=="))
+
+        # Serialization after offering [2, 6, 19, 29, 41, 48]
+        hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQbwdJz0Afq4AbSZAqxX4i4="))
+
+        expect(hllp.cardinality).to eq(9)
+        expect(hllp2.cardinality).to eq(6)
+
+        # The set intersection of hllp and hllp2 has one element, 41, so after
+        # merging the cardinality should be 14.
+        hllp.merge(hllp2)
+        expect(hllp.cardinality).to eq(14)
+      end
+
       it 'merges and keeps the cardinality exact' do
         hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQOwX+yBA7TzAw=="))
         hllp2 = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQ7SKbociFqGigLUL9oagCWmC+IdlBqkE8g7jFiCnwE="))
@@ -268,6 +285,18 @@ module Hyperll
         hllp.merge(hllp2)
         expect(hllp.format).to eq(:normal)
         expect(hllp.cardinality).to eq(8) # 3 + 3 = 8; that's how it goes with hll
+      end
+    end
+
+    context 'merging multiple at a time' do
+      it 'merges' do
+        hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 10, 1, 1, -110, 10].pack("C*"))
+        hllp2 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 10, 1, 1, -46, 5].pack("C*"))
+        hllp3 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 4, 10, 1, 1, -124, 6].pack("C*"))
+
+        hllp.merge(hllp2, hllp3)
+        expect(hllp.format).to eq(:sparse)
+        expect(hllp.cardinality).to eq(3) # 1 + 1 + 1 = 3
       end
     end
   end
