@@ -198,6 +198,17 @@ module Hyperll
   end
 
   describe 'merging' do
+    context 'of different sizes' do
+      it 'raises an error' do
+        hllp = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 11, 25, 1, 0].pack("C*")) # 11, 25
+        hllp2 = HyperLogLogPlus.unserialize([-1, -1, -1, -2, 12, 24, 1, 0].pack("C*")) # 12, 24
+
+        expect {
+          hllp.merge(hllp2)
+        }.to raise_error(ArgumentError)
+      end
+    end
+
     context 'sparse with sparse' do
       it 'merges and keeps the cardinality exact' do
         hllp = HyperLogLogPlus.unserialize(Base64.decode64("/////gsQAQLC3gKCxQM="))
