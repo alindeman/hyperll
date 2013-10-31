@@ -65,9 +65,6 @@ static VALUE rb_delta_bytes_uncompress(VALUE self, VALUE rcompressed) {
     compressed[i] = (uint8_t)NUM2INT(rb_ary_entry(rcompressed, i));
   }
 
-  int offset = 0;
-  int len = 0;
-
   uint32_t *values = (uint32_t*)calloc(rlen, sizeof(uint32_t));
   int vlen = delta_bytes_uncompress(compressed, rlen, values);
   if (vlen < 0) {

@@ -21,8 +21,9 @@ uint32_t varint_read_unsigned(uint8_t bytes[], int maxlen, int *len) {
     return 0;
   }
 
-  uint32_t value, i, b;
-  value = i = b = 0;
+  uint32_t value = 0;
+  int i = 0;
+  int b = 0;
 
   while (((b = bytes[i]) & 0x80) != 0) {
     value |= (b & 0x7F) << (i * 7);
