@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'hyperll/delta_bytes'
+require 'hyperll'
 
 module Hyperll
   describe DeltaBytes do

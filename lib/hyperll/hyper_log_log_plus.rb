@@ -1,5 +1,4 @@
 require_relative 'murmur_hash'
-require_relative 'delta_bytes'
 
 module Hyperll
   class HyperLogLogPlus

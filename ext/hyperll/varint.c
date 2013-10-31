@@ -24,6 +24,11 @@ int varint_write_unsigned(uint32_t value, uint32_t bytes[]) {
 // len - the number of bytes read to reconstruct the varint; -1 if an error
 //       occurred
 uint32_t varint_read_unsigned(uint32_t bytes[], int maxlen, int *len) {
+  if (maxlen <= 0) {
+    *len = -1;
+    return 0;
+  }
+
   uint32_t value, i, b;
   value = i = b = 0;
 
