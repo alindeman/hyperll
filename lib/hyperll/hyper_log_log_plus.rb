@@ -17,6 +17,7 @@ module Hyperll
           hllp.format = :normal
         }
       when 1 # :sparse
+        ss_length = Varint.read_unsigned_var_int(unpacked)
         sparse_set = DeltaBytes.uncompress(unpacked)
         new(p, sp, nil, sparse_set)
       else
@@ -39,7 +40,10 @@ module Hyperll
         str << rs_bytes.pack("N*")
       when :sparse
         str << Varint.write_unsigned_var_int(1).pack("C*")
-        str << DeltaBytes.compress(raw_sparse_set).pack("C*")
+
+        ss_bytes = raw_sparse_set
+        str << Varint.write_unsigned_var_int(ss_bytes.length).pack("C*")
+        str << DeltaBytes.compress(ss_bytes).pack("C*")
       end
 
       str

@@ -4,26 +4,18 @@
 extern VALUE rb_mHyperll;
 VALUE rb_cVarint;
 
-// Pass a uint32_t[5] array of size 5.
-//
-// Returns the count of the bytes that were actually needed to store the varint
-int varint_write_unsigned(uint32_t value, uint32_t bytes[]) {
+int varint_write_unsigned(uint32_t value, uint8_t bytes[]) {
   int i = 0;
   while ((value & 0xFFFFFF80) != 0) {
-    bytes[i++] = ((value & 0x7F) | 0x80);
+    bytes[i++] = (uint8_t)((value & 0x7F) | 0x80);
     value >>= 7;
   }
 
-  bytes[i++] = (value & 0x7F);
+  bytes[i++] = (uint8_t)(value & 0x7F);
   return i;
 }
 
-// Reads an unsigned varint.
-//
-// maxlen - the maximum size of the byte array, to prevent buffer overruns
-// len - the number of bytes read to reconstruct the varint; -1 if an error
-//       occurred
-uint32_t varint_read_unsigned(uint32_t bytes[], int maxlen, int *len) {
+uint32_t varint_read_unsigned(uint8_t bytes[], int maxlen, int *len) {
   if (maxlen <= 0) {
     *len = -1;
     return 0;
@@ -51,9 +43,9 @@ static VALUE rb_varint_read_unsigned_var_int(VALUE klass, VALUE rbytes) {
   int rlen = RARRAY_LEN(rbytes);
   int maxlen = (rlen > 5) ? 5 : rlen;
 
-  uint32_t bytes[5];
+  uint8_t bytes[5];
   for (int i = 0; i < maxlen; i++) {
-    bytes[i] = NUM2ULONG(rb_ary_entry(rbytes, i));
+    bytes[i] = (uint8_t)NUM2INT(rb_ary_entry(rbytes, i));
   }
 
   int len = 0;
@@ -74,10 +66,10 @@ static VALUE rb_varint_read_unsigned_var_int(VALUE klass, VALUE rbytes) {
 static VALUE rb_varint_write_unsigned_var_int(VALUE klass, VALUE value) {
   VALUE rbytes = rb_ary_new2(5);
 
-  uint32_t bytes[5];
+  uint8_t bytes[5];
   int len = varint_write_unsigned(NUM2ULONG(value), bytes);
   for (int i = 0; i < len; i++) {
-    rb_ary_push(rbytes, ULONG2NUM(bytes[i]));
+    rb_ary_push(rbytes, INT2NUM(bytes[i]));
   }
 
   return rbytes;
