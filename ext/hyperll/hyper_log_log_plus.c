@@ -4,6 +4,8 @@
 #include "hyperll.h"
 #include "register_set.h"
 #include "sparse_set.h"
+#include "delta_bytes.h"
+#include "varint.h"
 
 extern VALUE rb_mHyperll;
 VALUE rb_cHyperllp;
@@ -173,7 +175,6 @@ double hyperllp_estimate_bias(hyperllp *hllp, double estimate) {
 
     double biastotal = 0;
     for (int i = 0; i < 6; i++) {
-      //printf("nearest[%d]: %d with distance %lf\n", i, distances[i].index, distances[i].distance);
       biastotal += biasvector[distances[i].index];
     }
 
@@ -301,9 +302,109 @@ void hyperllp_merge(hyperllp *hllp, hyperllp *other) {
   }
 }
 
+static VALUE rb_hyperllp_unserialize(VALUE klass, VALUE rserialized) {
+  Check_Type(rserialized, T_STRING);
+
+  int size = RSTRING_LEN(rserialized);
+  uint8_t *serialized = (uint8_t*)RSTRING_PTR(rserialized);
+
+  // The first four bytes are a version number which we do not use
+  int offset = 4;
+  int len = 0;
+
+  int p = varint_read_unsigned(serialized + offset, size - offset, &len);
+  if (len < 0) {
+    rb_raise(rb_eArgError, "invalid serialized p value");
+    goto error;
+  }
+  offset += len;
+
+  int sp = varint_read_unsigned(serialized + offset, size - offset, &len);
+  if (len < 0) {
+    rb_raise(rb_eArgError, "invalid serialized sp value");
+    goto error;
+  }
+  offset += len;
+
+  int format = varint_read_unsigned(serialized + offset, size - offset, &len);
+  if (len < 0) {
+    rb_raise(rb_eArgError, "invalid serialized format value");
+    goto error;
+  }
+  offset += len;
+
+  hyperllp *hllp = ALLOC(hyperllp);
+  hyperllp_init(hllp, p, sp);
+  VALUE hllpv = Data_Wrap_Struct(klass, 0, hyperllp_free, hllp);
+
+  if (format == FORMAT_NORMAL) {
+    register_set *rset = hllp->register_set;
+
+    int rsetlen = varint_read_unsigned(serialized + offset, size - offset, &len);
+    if (len < 0) {
+      rb_raise(rb_eArgError, "invalid register size value");
+      goto error;
+    }
+    offset += len;
+
+    int rsetsize = rsetlen / 4;
+    if ((size - offset) < rsetlen) {
+      rb_raise(rb_eArgError, "not enough register set bytes (got %d, needed %d)", size - offset, rsetlen);
+      goto error;
+    } else if (rsetsize != rset->size) {
+      rb_raise(rb_eArgError, "register set size does not correspond to p value (got %d, expected %d)", rsetsize, rset->size);
+      goto error;
+    }
+
+    uint8_t *rsetbytes = (serialized + offset);
+    for (int i = 0; i < rsetsize; i++) {
+      uint32_t value = (((uint32_t)rsetbytes[i*4 + 0]) << 24) |
+                       (((uint32_t)rsetbytes[i*4 + 1]) << 16) |
+                       (((uint32_t)rsetbytes[i*4 + 2]) <<  8) |
+                       (((uint32_t)rsetbytes[i*4 + 3]));
+
+      rset->values[i] = value;
+    }
+
+    hllp->format = FORMAT_NORMAL;
+  } else if (format == FORMAT_SPARSE) {
+    sparse_set *sset = hllp->sparse_set;
+
+    int ssetsize = varint_read_unsigned(serialized + offset, size - offset, &len);
+    if (len < 0) {
+      rb_raise(rb_eArgError, "invalid sparse size value");
+      goto error;
+    } else if (ssetsize > sset->capacity) {
+      rb_raise(rb_eArgError, "sparse set size does not correspond to capacity value (got %d, expected %d)", ssetsize, sset->capacity);
+      goto error;
+    }
+    offset += len;
+
+    len = delta_bytes_uncompress(serialized + offset, size - offset, sset->values);
+    if (len < 0) {
+      rb_raise(rb_eArgError, "invalid sparse set representation");
+      goto error;
+    } else if (len != ssetsize) {
+      rb_raise(rb_eArgError, "did not find as many sparse set values as expected (got %d, expected %d)", len, ssetsize);
+      goto error;
+    } else {
+      sset->size = len;
+    }
+
+    hllp->format = FORMAT_SPARSE;
+  } else {
+    rb_raise(rb_eArgError, "invalid format value (got %d)", format);
+    goto error;
+  }
+
+  return hllpv;
+error:
+  return Qnil;
+}
+
 static VALUE rb_hyperllp_new(int argc, VALUE *argv, VALUE klass) {
-  VALUE p, sp, register_set_values, sparse_set_values;
-  rb_scan_args(argc, argv, "13", &p, &sp, &register_set_values, &sparse_set_values);
+  VALUE p, sp;
+  rb_scan_args(argc, argv, "11", &p, &sp);
 
   if (NIL_P(sp)) sp = INT2NUM(0);
 
@@ -314,33 +415,6 @@ static VALUE rb_hyperllp_new(int argc, VALUE *argv, VALUE klass) {
   if (hllp->p < 4) rb_raise(rb_eArgError, "p must be >= 4");
   if (hllp->sp >= 32) rb_raise(rb_eArgError, "sp must be < 32");
   if (hllp->sp != 0 && hllp->p > hllp->sp) rb_raise(rb_eArgError, "p must be <= sp");
-
-  if (!NIL_P(register_set_values)) {
-    Check_Type(register_set_values, T_ARRAY);
-
-    register_set *rset = hllp->register_set;
-    if (RARRAY_LEN(register_set_values) == rset->size) {
-      for (int i = 0; i < rset->size; i++) {
-        rset->values[i] = NUM2ULONG(rb_ary_entry(register_set_values, i));
-      }
-    } else {
-      rb_raise(rb_eArgError, "initial register set values is not of the correct size");
-    }
-  }
-
-  if (!NIL_P(sparse_set_values)) {
-    Check_Type(sparse_set_values, T_ARRAY);
-
-    sparse_set *sset = hllp->sparse_set;
-    if (RARRAY_LEN(sparse_set_values) <= sset->capacity) {
-      sset->size = RARRAY_LEN(sparse_set_values);
-      for (int i = 0; i < sset->size; i++) {
-        sset->values[i] = NUM2ULONG(rb_ary_entry(sparse_set_values, i));
-      }
-    } else {
-      rb_raise(rb_eArgError, "initial sparse set values have too many values");
-    }
-  }
 
   return hllpv;
 }
@@ -458,6 +532,7 @@ void Init_hyperll_hyper_log_log_plus(void) {
   rb_cHyperllp = rb_define_class_under(rb_mHyperll, "HyperLogLogPlus", rb_cObject);
 
   rb_define_singleton_method(rb_cHyperllp, "new", rb_hyperllp_new, -1);
+  rb_define_singleton_method(rb_cHyperllp, "unserialize", rb_hyperllp_unserialize, 1);
 
   rb_define_method(rb_cHyperllp, "format", rb_hyperllp_format, 0);
   rb_define_method(rb_cHyperllp, "format=", rb_hyperllp_format_set, 1);
