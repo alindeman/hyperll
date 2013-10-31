@@ -241,28 +241,6 @@ module Hyperll
         hllp.merge(hllp2)
         expect(hllp.cardinality).to eq(4)
       end
-
-      it 'merges correctly with a production sample set' do
-        json = JSON.parse(File.read(File.join(File.dirname(__FILE__), '..', 'fixtures', 'merge-many-sets.json')))
-
-        data = json.map do |o|
-          o['hll'] = HyperLogLogPlus.unserialize(Base64.decode64(o['hll']))
-          o
-        end
-
-        # Expect hourly buckets to parse correctly.
-        data.each do |o|
-          expect(o['hll'].cardinality).to eq(o['unique'])
-        end
-
-        # Expect merge to parse correctly.
-        hllp = HyperLogLogPlus.new(11, 16)
-        data.each do |o|
-          hllp.merge(o['hll'])
-        end
-
-        expect(hllp.cardinality).to eq(182)
-      end
     end
 
     context 'normal with normal' do
