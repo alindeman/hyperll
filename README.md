@@ -1,6 +1,7 @@
 # Hyperll [![Build Status](https://secure.travis-ci.org/alindeman/hyperll.png?branch=master)](http://travis-ci.org/alindeman/hyperll) [![Coverage Status](https://coveralls.io/repos/alindeman/hyperll/badge.png)](https://coveralls.io/r/alindeman/hyperll)
 
-HyperLogLog implementation in pure Ruby
+HyperLogLog implementation for Ruby. Originally written in pure Ruby, many
+pieces were rewritten in C for increased performance.
 
 ## Usage
 
