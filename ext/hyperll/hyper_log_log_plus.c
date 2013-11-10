@@ -397,6 +397,7 @@ static VALUE rb_hyperllp_unserialize(VALUE klass, VALUE rserialized) {
     goto error;
   }
 
+  RB_GC_GUARD(rserialized);
   return hllpv;
 error:
   return Qnil;
